@@ -4,8 +4,8 @@ import { generateTestUser, registerTestUser } from './helpers.js';
 test.describe('2. Workspace Management Workflows', () => {
   test('creates a workspace and navigates between multiple workspaces', async ({ page }) => {
     page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        console.log('[BROWSER ERROR]', msg.text(), msg.location());
+      if (msg.text().includes('REACT ERROR') || msg.text().includes('CALLER STACK') || msg.type() === 'error') {
+        console.log('[BROWSER]', msg.text());
       }
     });
 
@@ -16,17 +16,20 @@ test.describe('2. Workspace Management Workflows', () => {
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Click Workspace selector in the sidebar to open dropdown
-    // Selector button contains workspace initial and name
     const wsSelectorBtn = page.locator('aside').getByRole('button', { name: new RegExp(user.name, 'i') }).first();
     await wsSelectorBtn.click();
 
     // Click Create Workspace in the dropdown
     await page.getByRole('button', { name: /create workspace/i }).first().click();
 
+    // Wait for modal dialog to be visible
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
     // Fill workspace creation modal
     const wsName = `Platform Eng ${Date.now().toString().slice(-4)}`;
-    await page.locator('input[placeholder="e.g. Mobile Cloud Platform"]').first().fill(wsName);
-    await page.locator('div[role="dialog"]').getByRole('button', { name: /create workspace/i }).first().click();
+    await dialog.locator('#workspace-name').fill(wsName);
+    await dialog.getByRole('button', { name: /create workspace/i }).click();
 
     // Verify navigation to new workspace overview
     await page.waitForURL(/\/workspace\//, { timeout: 15000 });

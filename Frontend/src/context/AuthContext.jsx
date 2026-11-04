@@ -65,7 +65,7 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   // Login handler
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       const response = await api.post('/auth/login', {
         email: email.trim(),
@@ -85,10 +85,10 @@ export function AuthProvider({ children }) {
         'Login failed. Please check your network and credentials.';
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
   // Register handler
-  const register = async (name, email, password) => {
+  const register = useCallback(async (name, email, password) => {
     try {
       const response = await api.post('/auth/register', {
         name: name.trim(),
@@ -111,9 +111,9 @@ export function AuthProvider({ children }) {
         'Registration failed. Please check your data and try again.';
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
-  const value = {
+  const value = React.useMemo(() => ({
     user,
     token,
     isAuthenticated: Boolean(token && user),
@@ -122,7 +122,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     fetchProfile
-  };
+  }), [user, token, isLoading, login, register, logout, fetchProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

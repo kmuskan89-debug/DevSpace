@@ -37,3 +37,7 @@ Desktop.ini
 *.sublime-workspace
 *.sw?
 
+# Playwright
+Frontend/playwright-report/
+Frontend/test-results/
+test-results/
