@@ -20,7 +20,7 @@ export default defineConfig({
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
   ],
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://localhost:5199',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -39,13 +39,13 @@ export default defineConfig({
       command: `node "${path.resolve(__dirname, '../Backend/e2e-server.js')}"`,
       port: 5055,
       timeout: 30000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     {
-      command: 'npx vite --port 5174 --mode test',
-      port: 5174,
+      command: 'npx vite --port 5199 --mode test',
+      port: 5199,
       timeout: 30000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
   ],
 });

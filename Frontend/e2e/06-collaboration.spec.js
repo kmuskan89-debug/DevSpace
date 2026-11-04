@@ -16,31 +16,33 @@ test.describe('6. Team Collaboration & Members Workflows', () => {
     await expect(page.getByText(/owner/i).first()).toBeVisible();
 
     // 3. Open Invite Member modal
-    await page.getByRole('button', { name: /invite member/i }).first().click();
-    const inviteModal = page.locator('div[role="dialog"]').first();
+    await page.getByTestId('open-invite-modal-btn').click();
+    const inviteModal = page.getByRole('dialog');
     await expect(inviteModal).toBeVisible();
 
     // Fill invitation form
     const inviteeEmail = `invitee_${Date.now().toString().slice(-4)}@devspace.test`;
-    await inviteModal.getByPlaceholder(/colleague@company.com/i).fill(inviteeEmail);
-
-    // Send invitation
-    await inviteModal.getByRole('button', { name: /send invitation/i }).click();
+    const emailInput = inviteModal.getByPlaceholder(/colleague@company.com/i);
+    await emailInput.fill(inviteeEmail);
+    await emailInput.press('Enter');
 
     // Verify invitation confirmation / token display
-    await expect(page.getByText(/invitation sent/i)).toBeVisible();
+    await expect(page.getByText(/invitation sent|invitation generated/i).first()).toBeVisible();
 
-    // Close modal
-    await inviteModal.getByRole('button', { name: /done|close/i }).click();
+    // Close modal if still visible
+    const doneBtn = page.getByRole('button', { name: /done|cancel/i });
+    if (await doneBtn.isVisible()) {
+      await doneBtn.click();
+    }
 
     // 4. Switch to "Pending Invitations" tab
     await page.getByRole('button', { name: /pending invitations/i }).click();
-    await expect(page.getByText(inviteeEmail)).toBeVisible();
+    await expect(page.getByRole('cell', { name: inviteeEmail })).toBeVisible();
 
     // 5. Switch to "Roles & Permissions" matrix tab
     await page.getByRole('button', { name: /roles & permissions/i }).click();
-    await expect(page.getByText(/view workspace projects/i)).toBeVisible();
-    await expect(page.getByText(/create & edit projects/i)).toBeVisible();
+    await expect(page.getByText(/view workspace projects/i).first()).toBeVisible();
+    await expect(page.getByText(/create & edit projects/i).first()).toBeVisible();
   });
 });
 

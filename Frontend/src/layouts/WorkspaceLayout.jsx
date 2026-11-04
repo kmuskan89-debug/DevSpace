@@ -13,7 +13,7 @@ export function WorkspaceLayout() {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const { addToast } = useToast();
 
-  if (isLoadingWorkspaces) {
+  if (isLoadingWorkspaces && !workspace) {
     return (
       <div className="py-24 flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />

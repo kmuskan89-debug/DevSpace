@@ -35,13 +35,14 @@ test.describe('2. Workspace Management Workflows', () => {
     await page.waitForURL(/\/workspace\//, { timeout: 15000 });
     await expect(page.getByText(wsName).first()).toBeVisible();
 
-    // Open workspace switcher again and verify both workspaces exist
-    await wsSelectorBtn.click();
+    // Open workspace switcher again (now named with the new workspace name)
+    const newWsBtn = page.locator('aside').getByRole('button', { name: new RegExp(wsName, 'i') }).first();
+    await newWsBtn.click();
     await expect(page.getByText(wsName).first()).toBeVisible();
     await expect(page.getByText(`${user.name}'s Workspace`).first()).toBeVisible();
 
     // Switch back to original workspace
-    await page.getByRole('button', { name: new RegExp(`${user.name}'s Workspace`, 'i') }).click();
+    await page.locator('aside').getByRole('button', { name: new RegExp(`${user.name}'s Workspace`, 'i') }).first().click();
     await expect(page.getByText(`${user.name}'s Workspace`).first()).toBeVisible();
   });
 
@@ -50,11 +51,12 @@ test.describe('2. Workspace Management Workflows', () => {
     await registerTestUser(page, user);
 
     // Navigate to workspace settings
-    await page.locator('aside button[title]').first().click();
+    const wsSelectorBtn = page.locator('aside').getByRole('button', { name: new RegExp(user.name, 'i') }).first();
+    await wsSelectorBtn.click();
     await page.getByRole('button', { name: /workspace settings/i }).first().click();
 
     await page.waitForURL(/\/settings/, { timeout: 15000 });
-    await expect(page.getByRole('heading', { name: /workspace settings/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /workspace configuration/i })).toBeVisible();
   });
 });
 

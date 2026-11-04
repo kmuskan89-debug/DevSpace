@@ -86,6 +86,8 @@ export function TaskModal({ isOpen, onClose, task, defaultStatus = 'To Do', onSa
 
   // Sync state when `task` changes or modal opens
   useEffect(() => {
+    if (!isOpen) return;
+
     if (task) {
       setTitle(task.title || '');
       setDescription(task.description || '');
@@ -117,7 +119,7 @@ export function TaskModal({ isOpen, onClose, task, defaultStatus = 'To Do', onSa
     setTitleError('');
     setCommentError('');
     setActiveTab('details');
-  }, [task, defaultStatus, isOpen, loadComments, memberList]);
+  }, [isOpen, task, defaultStatus]);
 
   // Selected Assignee Helper
   const currentAssignee = memberList.find((m) => m.id === assigneeId || m._id === assigneeId) || null;

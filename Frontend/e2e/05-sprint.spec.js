@@ -14,8 +14,8 @@ test.describe('5. Scrum & Sprint Management Workflows', () => {
     const randKey = `S${Date.now().toString().slice(-4)}`;
     const projName = `Scrum Service ${randKey}`;
     const modal = page.locator('div[role="dialog"]').first();
-    await modal.getByLabel(/project name/i).fill(projName);
-    await modal.getByLabel(/project key/i).fill(randKey);
+    await modal.getByPlaceholder(/e\.g\. Core Auth Service/i).fill(projName);
+    await modal.getByPlaceholder(/e\.g\. AUTH/i).fill(randKey);
     await modal.getByRole('button', { name: /create project/i }).click();
 
     // 2. Open project and navigate to Backlog
@@ -33,7 +33,7 @@ test.describe('5. Scrum & Sprint Management Workflows', () => {
     const sprintGoal = 'Deliver core authentication, database schemas, and baseline APIs.';
 
     const sprintModal = page.locator('div[role="dialog"]').first();
-    await sprintModal.getByLabel(/sprint name/i).fill(sprintName);
+    await sprintModal.getByPlaceholder(/e\.g\. Sprint 1/i).fill(sprintName);
     await sprintModal.locator('textarea').fill(sprintGoal);
 
     // Click submit in modal
@@ -43,7 +43,7 @@ test.describe('5. Scrum & Sprint Management Workflows', () => {
     await expect(page.getByText(sprintName).first()).toBeVisible();
 
     // 5. Create a backlog issue to assign
-    await page.getByRole('button', { name: /create issue/i }).first().click();
+    await page.getByRole('button', { name: /create issue|\+ add issue/i }).first().click();
     const issueTitle = `Setup Redis Caching Layer ${randKey}`;
     const issueModal = page.locator('div[role="dialog"]').first();
     await issueModal.getByPlaceholder(/e\.g\. Implement OAuth2/i).fill(issueTitle);

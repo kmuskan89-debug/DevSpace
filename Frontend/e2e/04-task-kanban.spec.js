@@ -14,8 +14,8 @@ test.describe('4. Task & Kanban Board Workflows', () => {
     const randKey = `K${Date.now().toString().slice(-4)}`;
     const projName = `Kanban Project ${randKey}`;
     const modal = page.locator('div[role="dialog"]').first();
-    await modal.getByLabel(/project name/i).fill(projName);
-    await modal.getByLabel(/project key/i).fill(randKey);
+    await modal.getByPlaceholder(/e\.g\. Core Auth Service/i).fill(projName);
+    await modal.getByPlaceholder(/e\.g\. AUTH/i).fill(randKey);
     await modal.getByRole('button', { name: /create project/i }).click();
 
     // 2. Open project board
@@ -26,8 +26,8 @@ test.describe('4. Task & Kanban Board Workflows', () => {
     await page.getByRole('button', { name: /^Board/ }).click();
     await page.waitForURL(/\/board/, { timeout: 15000 });
 
-    // 3. Create a task via Kanban board empty state or add button
-    const createBtn = page.getByRole('button', { name: /create task/i }).first();
+    // 3. Create a task via Kanban board New Task button (in main)
+    const createBtn = page.locator('main').getByRole('button', { name: 'New Task' }).first();
     await createBtn.click();
 
     // Fill TaskModal
@@ -37,32 +37,32 @@ test.describe('4. Task & Kanban Board Workflows', () => {
     await taskModal.getByPlaceholder(/e\.g\. Implement OAuth2/i).fill(taskTitle);
     await taskModal.locator('textarea').fill(taskDesc);
 
-    // Select Priority High
-    await taskModal.locator('select').first().selectOption('High');
+    // Select Priority High (select index 1: 0 is Status, 1 is Priority, 2 is Assignee)
+    await taskModal.locator('select').nth(1).selectOption('High');
 
     // Click Create Task
     await taskModal.getByRole('button', { name: /create task/i }).click();
 
     // 4. Verify task appears on Kanban board
-    await expect(page.getByText(taskTitle).first()).toBeVisible();
+    await expect(page.locator('main').getByRole('heading', { level: 4, name: taskTitle })).toBeVisible();
 
     // 5. Click on the task to open edit modal
-    await page.getByText(taskTitle).first().click();
+    await page.locator('main').getByRole('heading', { level: 4, name: taskTitle }).click();
     await expect(page.locator('div[role="dialog"]').first()).toBeVisible();
 
-    // Update Status to "In Progress"
+    // Update Status to "In Progress" (select index 0)
     const editModal = page.locator('div[role="dialog"]').first();
-    await editModal.locator('select').nth(1).selectOption('In Progress');
+    await editModal.locator('select').first().selectOption('In Progress');
 
     // Click Save Changes
     await editModal.getByRole('button', { name: /save changes/i }).click();
 
     // 6. Verify task is visible in "In Progress"
-    await expect(page.getByText(taskTitle).first()).toBeVisible();
+    await expect(page.locator('main').getByRole('heading', { level: 4, name: taskTitle })).toBeVisible();
 
     // 7. Verify persistence across page refresh
     await page.reload();
-    await expect(page.getByText(taskTitle).first()).toBeVisible();
+    await expect(page.locator('main').getByRole('heading', { level: 4, name: taskTitle })).toBeVisible();
   });
 });
 

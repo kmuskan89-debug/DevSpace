@@ -118,13 +118,20 @@ export function useWorkspace(overrideWorkspaceId) {
   // Compute current user's role in this workspace
   const userRole = useMemo(() => {
     if (!workspace || !user) return 'Viewer';
-    const uId = user._id || user.id;
+    const uId = (user._id || user.id)?.toString();
+    const wsOwnerId = (workspace.ownerId || workspace.owner?._id || (typeof workspace.owner === 'string' && workspace.owner.length === 24 ? workspace.owner : null))?.toString();
 
-    if (workspace.ownerId === uId || workspace.owner === user.name) {
+    if (wsOwnerId && uId && wsOwnerId === uId) {
+      return 'Owner';
+    }
+    if (workspace.owner === user.name || workspace.ownerName === user.name) {
       return 'Owner';
     }
 
-    const memberRec = members.find((m) => m.userId === uId || m.id === uId || m.email === user.email);
+    const memberRec = members.find((m) => {
+      const mId = (m.userId || m.id || m._id)?.toString();
+      return mId === uId || m.email === user.email;
+    });
     if (memberRec) {
       if (memberRec.role === 'Workspace Owner' || memberRec.role === 'Owner') return 'Owner';
       return memberRec.role;

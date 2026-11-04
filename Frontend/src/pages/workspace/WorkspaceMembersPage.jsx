@@ -232,6 +232,7 @@ export function WorkspaceMembersPage() {
             variant="primary"
             size="sm"
             icon={UserPlus}
+            data-testid="open-invite-modal-btn"
             onClick={() => {
               setInviteSuccessData(null);
               setInviteError('');
@@ -492,8 +493,9 @@ export function WorkspaceMembersPage() {
         title="Invite Teammate"
         subtitle={`Send a workspace invitation to collaborate in "${workspace.name}"`}
         footer={
-          <>
+          <div className="flex items-center gap-2">
             <Button
+              key="invite-modal-cancel"
               variant="outline"
               size="sm"
               onClick={() => {
@@ -506,6 +508,7 @@ export function WorkspaceMembersPage() {
             </Button>
             {!inviteSuccessData && (
               <Button
+                key="invite-modal-submit"
                 variant="primary"
                 size="sm"
                 onClick={handleSendInvite}
@@ -514,7 +517,7 @@ export function WorkspaceMembersPage() {
                 {isSendingInvite ? 'Sending...' : 'Send Invitation'}
               </Button>
             )}
-          </>
+          </div>
         }
       >
         <div className="space-y-4">

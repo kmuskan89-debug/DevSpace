@@ -15,7 +15,6 @@ import UserMenu from './UserMenu';
 import GlobalSearchModal from './GlobalSearchModal';
 import { useWorkspace } from '../../hooks/useWorkspace';
 import { useNotifications } from '../../context/NotificationContext';
-import CreateWorkspaceModal from '../workspace/CreateWorkspaceModal';
 
 export function Topbar({
   isSidebarCollapsed = false,
@@ -244,9 +243,6 @@ export function Topbar({
           </div>
         </div>
       </header>
-
-      {/* Global Create Workspace Modal */}
-      <CreateWorkspaceModal isOpen={isCreateModalOpen} onClose={closeCreateModal} />
 
       {/* Global Search Modal */}
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

@@ -19,8 +19,8 @@ test.describe('3. Project Management Workflows', () => {
     const projDesc = 'End-to-end cloud infrastructure management service.';
 
     const modal = page.locator('div[role="dialog"]').first();
-    await modal.getByLabel(/project name/i).fill(projName);
-    await modal.getByLabel(/project key/i).fill(randKey);
+    await modal.getByPlaceholder(/e\.g\. Core Auth Service/i).fill(projName);
+    await modal.getByPlaceholder(/e\.g\. AUTH/i).fill(randKey);
     await modal.locator('textarea').fill(projDesc);
 
     // Click submit in modal
