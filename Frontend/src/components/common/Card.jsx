@@ -10,8 +10,8 @@ export function Card({
   return (
     <div
       onClick={onClick}
-      className={`glass-card rounded-xl p-5 transition-all duration-200 ${
-        hoverable ? 'hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-950/20' : ''
+      className={`rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-4 sm:p-5 transition-colors duration-150 ${
+        hoverable ? 'hover:bg-[#FAFAF9] dark:hover:bg-[#2A2A2A] hover:border-[#D1D1CD] dark:hover:border-[#444444]' : ''
       } ${onClick ? 'cursor-pointer' : ''} ${className}`}
       {...props}
     >

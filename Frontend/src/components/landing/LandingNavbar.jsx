@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Terminal, Menu, X, ArrowRight, Sun, Moon } from 'lucide-react';
+import { Terminal, Menu, X, Sun, Moon } from 'lucide-react';
 import Button from '../common/Button';
 import { useTheme } from '../../hooks/useTheme';
 
@@ -18,133 +18,132 @@ export function LandingNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800/80 px-4 sm:px-8 py-3.5 transition-all">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand Logo */}
+    <header className="sticky top-0 z-50 border-b border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF]/90 dark:bg-[#191919]/90 backdrop-blur-sm px-4 sm:px-8 py-3 transition-colors">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        {/* Brand Logo & Wordmark */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Terminal className="w-5 h-5 text-cyan-400" />
-            </div>
+          <div className="w-7 h-7 rounded-md bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] flex items-center justify-center font-bold shadow-2xs">
+            <Terminal className="w-3.5 h-3.5" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-sm tracking-tight text-[#252525] dark:text-[#F2F2F2]">
               DevSpace
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hidden sm:inline-block">
+            <span className="px-1.5 py-0.2 rounded text-[10px] font-mono text-[#777777] dark:text-[#A0A0A0] bg-[#F1F1EF] dark:bg-[#2A2A2A] border border-[#E8E8E5] dark:border-[#353535]">
               v2.4
             </span>
           </div>
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-300">
+        <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">
           <button
             type="button"
             onClick={() => scrollToSection('features')}
-            className="hover:text-indigo-400 transition-colors cursor-pointer"
+            className="hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors cursor-pointer"
           >
             Features
           </button>
           <button
             type="button"
-            onClick={() => scrollToSection('how-it-works')}
-            className="hover:text-indigo-400 transition-colors cursor-pointer"
+            onClick={() => scrollToSection('workflow')}
+            className="hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors cursor-pointer"
           >
-            How It Works
+            Workflow
           </button>
           <button
             type="button"
-            onClick={() => scrollToSection('cta')}
-            className="hover:text-indigo-400 transition-colors cursor-pointer"
+            onClick={() => scrollToSection('capabilities')}
+            className="hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors cursor-pointer"
           >
-            Platform
+            Capabilities
           </button>
         </nav>
 
         {/* Action Buttons */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-3">
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-all cursor-pointer"
+            className="p-1.5 rounded-md text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors cursor-pointer"
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             aria-label="Toggle Theme"
           >
             {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-3.5 h-3.5" />
             ) : (
-              <Moon className="w-4 h-4 text-indigo-500" />
+              <Moon className="w-3.5 h-3.5" />
             )}
           </button>
           <Link
             to="/login"
-            className="text-xs font-semibold text-slate-300 hover:text-white transition-colors"
+            className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors px-2 py-1"
           >
-            Log In
+            Sign in
           </Link>
           <Button
             variant="primary"
             size="sm"
-            icon={ArrowRight}
             onClick={() => navigate('/register')}
           >
-            Get Started Free
+            Get Started
           </Button>
         </div>
 
-        {/* Mobile Hamburger Toggle */}
+        {/* Mobile Hamburger & Theme Toggle */}
         <div className="flex items-center gap-2 md:hidden">
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 transition-all cursor-pointer"
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            className="p-1.5 rounded-md text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors cursor-pointer"
             aria-label="Toggle Theme"
           >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-indigo-500" />
-            )}
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            aria-label="Toggle Navigation Menu"
+            className="p-1.5 rounded-md text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+            aria-label="Open mobile menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-4 pb-3 border-t border-slate-800/80 mt-3 space-y-3 animate-in fade-in slide-in-from-top duration-200">
-          <button
-            type="button"
-            onClick={() => scrollToSection('features')}
-            className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800/60 rounded-lg"
-          >
-            Features
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollToSection('how-it-works')}
-            className="block w-full text-left px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800/60 rounded-lg"
-          >
-            How It Works
-          </button>
-          <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => navigate('/login')}
-              className="w-full justify-center"
+        <div className="md:hidden pt-3 pb-4 border-t border-[#E8E8E5] dark:border-[#353535] mt-3 space-y-3">
+          <div className="flex flex-col space-y-2 text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">
+            <button
+              type="button"
+              onClick={() => scrollToSection('features')}
+              className="text-left px-2 py-1.5 rounded hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] hover:text-[#252525] dark:hover:text-[#F2F2F2]"
             >
-              Log In
-            </Button>
+              Features
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('workflow')}
+              className="text-left px-2 py-1.5 rounded hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] hover:text-[#252525] dark:hover:text-[#F2F2F2]"
+            >
+              Workflow
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('capabilities')}
+              className="text-left px-2 py-1.5 rounded hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] hover:text-[#252525] dark:hover:text-[#F2F2F2]"
+            >
+              Capabilities
+            </button>
+          </div>
+          <div className="pt-2 border-t border-[#E8E8E5] dark:border-[#353535] flex flex-col gap-2">
+            <Link
+              to="/login"
+              className="text-center py-2 text-xs font-medium text-[#252525] dark:text-[#F2F2F2] border border-[#E8E8E5] dark:border-[#353535] rounded-md"
+            >
+              Sign in
+            </Link>
             <Button
               variant="primary"
               size="md"

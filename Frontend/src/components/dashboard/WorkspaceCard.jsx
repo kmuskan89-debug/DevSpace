@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Users, FolderGit2, ArrowRight, Star, Clock } from 'lucide-react';
+import { Users, FolderGit2 } from 'lucide-react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 
@@ -10,59 +10,59 @@ export function WorkspaceCard({ workspace }) {
   return (
     <Card
       hoverable={true}
-      onClick={() => navigate(`/workspace/${workspace.id}`)}
-      className="group flex flex-col justify-between h-full border border-slate-800 hover:border-indigo-500/40"
+      onClick={() => navigate(`/workspace/${workspace.id || workspace._id}`)}
+      className="group flex flex-col justify-between h-full p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] hover:border-[#252525] dark:hover:border-[#777777] rounded-lg transition-colors cursor-pointer"
     >
       <div>
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${workspace.color || 'from-indigo-500 to-purple-600'} p-0.5 shadow-md`}>
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Layers className="w-5 h-5 text-indigo-400" />
-              </div>
+        <div className="flex items-start justify-between gap-2 mb-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-md bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] flex items-center justify-center font-bold text-xs shrink-0">
+              {workspace.name ? workspace.name.charAt(0).toUpperCase() : 'W'}
             </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">
+            <div className="truncate">
+              <h3 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] group-hover:text-[#000000] dark:group-hover:text-[#FFFFFF] transition-colors truncate my-0">
                 {workspace.name}
               </h3>
-              <p className="text-[11px] text-slate-400 font-mono">slug: {workspace.slug}</p>
+              <p className="text-[10px] text-[#777777] dark:text-[#A0A0A0] font-mono truncate mt-0.5">
+                slug: {workspace.slug || 'workspace'}
+              </p>
             </div>
           </div>
-          <Badge status={workspace.visibility} size="sm" />
+          <Badge status={workspace.visibility || 'Public'} size="sm" />
         </div>
 
         {/* Description */}
-        <p className="text-xs text-slate-300 line-clamp-2 mb-4 leading-relaxed">
-          {workspace.description}
+        <p className="text-xs text-[#777777] dark:text-[#A0A0A0] line-clamp-2 mb-3 leading-relaxed">
+          {workspace.description || 'DevSpace team collaboration workspace.'}
         </p>
 
         {/* Tech Stack Badges */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {workspace.techStack?.map((tech, i) => (
-            <Badge key={i} variant="tech">
-              {tech}
-            </Badge>
-          ))}
-        </div>
+        {workspace.techStack && workspace.techStack.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {workspace.techStack.map((tech, i) => (
+              <span
+                key={i}
+                className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Footer Stats */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-4">
+      <div className="pt-2.5 border-t border-[#E8E8E5] dark:border-[#353535] flex items-center justify-between text-xs text-[#777777] dark:text-[#A0A0A0]">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <FolderGit2 className="w-3.5 h-3.5 text-slate-500" />
-            <span>{workspace.projectCount} Projects</span>
+            <FolderGit2 className="w-3.5 h-3.5" />
+            <span>{workspace.projectCount || 0} Projects</span>
           </div>
           <div className="flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-slate-500" />
-            <span>{workspace.memberCount} Members</span>
+            <Users className="w-3.5 h-3.5" />
+            <span>{workspace.memberCount || 1} Members</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-1 text-indigo-400 group-hover:translate-x-1 transition-transform font-semibold">
-          <span>Open</span>
-          <ArrowRight className="w-3.5 h-3.5" />
         </div>
       </div>
     </Card>

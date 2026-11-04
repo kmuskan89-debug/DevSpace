@@ -1,40 +1,54 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderGit2, Kanban, CheckSquare, Clock, ArrowRight, User } from 'lucide-react';
+import { FolderGit2, Kanban, ArrowRight, Edit3, Trash2 } from 'lucide-react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import Avatar from '../common/Avatar';
 
-export function ProjectCard({ project }) {
+export function ProjectCard({ project, onEdit, onDelete, canManage = false }) {
   const navigate = useNavigate();
 
-  // Demo team members for project card
-  const teamMembers = [
-    { name: project.lead || 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80' },
-    { name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80' },
-    { name: 'Elena Rostova', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80' }
-  ];
+  const leadMember = {
+    name: project.lead || 'Project Lead',
+    avatar: project.leadObj?.avatar || ''
+  };
+
+  const projectUrl = `/workspace/${project.workspaceId}/projects/${project.id || project._id}`;
+  const boardUrl = `/workspace/${project.workspaceId}/projects/${project.id || project._id}/board`;
 
   return (
     <Card
       hoverable={true}
-      onClick={() => navigate(`/workspace/${project.workspaceId}/projects/${project.id}`)}
-      className="group flex flex-col justify-between h-full border border-slate-800 hover:border-indigo-500/40 transition-all space-y-4"
+      className="group flex flex-col justify-between h-full p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] hover:border-[#252525] dark:hover:border-[#777777] transition-all space-y-3.5 rounded-lg"
     >
       <div className="space-y-3">
-        {/* Header: Title, Repo & Badges */}
+        {/* Header: Icon, Name, Key & Badges */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-indigo-400 group-hover:scale-105 transition-transform shrink-0">
-              <FolderGit2 className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-md bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+              <FolderGit2 className="w-4 h-4" />
             </div>
             <div className="truncate">
-              <h3 className="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors truncate my-0">
-                {project.name}
-              </h3>
-              <p className="text-[11px] font-mono text-slate-400 truncate mt-0.5">{project.githubRepo}</p>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => navigate(projectUrl)}
+                  className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2] hover:underline transition-colors truncate my-0 text-left cursor-pointer"
+                >
+                  {project.name}
+                </button>
+                {project.key && (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535] shrink-0 font-bold">
+                    {project.key}
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] font-mono text-[#777777] dark:text-[#A0A0A0] truncate mt-0.5">
+                {project.githubRepo}
+              </p>
             </div>
           </div>
+
           <div className="flex items-center gap-1.5 shrink-0">
             {project.status && <Badge status={project.status} size="sm" />}
             {project.priority && <Badge priority={project.priority} size="sm" />}
@@ -42,62 +56,83 @@ export function ProjectCard({ project }) {
         </div>
 
         {/* Description */}
-        <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-          {project.description}
+        <p className="text-xs text-[#777777] dark:text-[#A0A0A0] line-clamp-2 leading-relaxed my-0">
+          {project.description || 'No description provided.'}
         </p>
 
-        {/* Sprint Progress Overview Bar */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-400">Sprint Progress</span>
-            <span className="text-indigo-400 font-bold">{project.progress}%</span>
+        {/* Technology Stack Tags */}
+        {project.techStack && project.techStack.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {project.techStack.map((tech, i) => (
+              <span
+                key={i}
+                className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]"
+              >
+                {tech}
+              </span>
+            ))}
           </div>
-          <div className="w-full h-2 rounded-full bg-slate-900 overflow-hidden border border-slate-800">
+        )}
+      </div>
+
+      {/* Progress & Footer */}
+      <div className="space-y-2.5 pt-2 border-t border-[#E8E8E5] dark:border-[#353535]">
+        {/* Progress Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-[10px] text-[#777777] dark:text-[#A0A0A0] font-mono">
+            <span>{project.completedTasksCount || 0} / {project.totalTasksCount || 0} tasks completed</span>
+            <span className="font-semibold text-[#252525] dark:text-[#F2F2F2]">{project.progress || 0}%</span>
+          </div>
+          <div className="w-full h-1 rounded-full bg-[#F1F1EF] dark:bg-[#2A2A2A] overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-500"
-              style={{ width: `${project.progress}%` }}
+              className="h-full bg-[#252525] dark:bg-[#F2F2F2] rounded-full transition-all duration-300"
+              style={{ width: `${project.progress || 0}%` }}
             />
           </div>
         </div>
 
-        {/* Task Counts Metrics */}
-        <div className="flex items-center justify-between text-xs font-mono pt-1 text-slate-400">
+        {/* Lead & Actions Row */}
+        <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-1.5">
-            <CheckSquare className="w-3.5 h-3.5 text-indigo-400" />
-            <span>{project.openTasksCount || 4} Open Tasks</span>
+            <Avatar src={leadMember.avatar} name={leadMember.name} size="xs" />
+            <span className="text-[11px] text-[#777777] dark:text-[#A0A0A0] truncate max-w-[100px]">
+              {leadMember.name}
+            </span>
           </div>
-          <span className="text-emerald-400">
-            ✓ {project.completedTasksCount || 18} Completed
-          </span>
-        </div>
 
-        {/* Tech Stack Badges */}
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {project.techStack?.map((t, idx) => (
-            <Badge key={idx} variant="tech">
-              {t}
-            </Badge>
-          ))}
-        </div>
-      </div>
+          <div className="flex items-center gap-1">
+            {canManage && onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(project)}
+                className="p-1 rounded text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors cursor-pointer"
+                title="Edit Project"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+              </button>
+            )}
 
-      {/* Footer: Member Avatars & Last Updated Info */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-        {/* Team Member Avatars Stack */}
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-2 overflow-hidden">
-            {teamMembers.map((m, i) => (
-              <div key={i} className="inline-block ring-2 ring-slate-950 rounded-full" title={`Assignee: ${m.name}`}>
-                <Avatar src={m.avatar} name={m.name} size="sm" />
-              </div>
-            ))}
+            {canManage && onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(project)}
+                className="p-1 rounded text-[#777777] dark:text-[#A0A0A0] hover:text-[#D83B01] dark:hover:text-[#F87171] hover:bg-[#FDF3F2] dark:hover:bg-[rgba(248,113,113,0.12)] transition-colors cursor-pointer"
+                title="Delete Project"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => navigate(boardUrl)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-[#252525] dark:text-[#F2F2F2] bg-[#F1F1EF] dark:bg-[#2A2A2A] hover:bg-[#E8E8E5] dark:hover:bg-[#353535] transition-colors cursor-pointer"
+              title="Open Kanban Board"
+            >
+              <Kanban className="w-3 h-3" />
+              <span>Board</span>
+            </button>
           </div>
-        </div>
-
-        {/* Last Updated Info */}
-        <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
-          <Clock className="w-3 h-3 text-slate-500" />
-          <span>Updated {project.updatedAt || '25 mins ago'}</span>
         </div>
       </div>
     </Card>

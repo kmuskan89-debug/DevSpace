@@ -1,96 +1,135 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Layers,
-  Plus,
-  Terminal,
-  Search,
   FolderGit2,
-  CheckSquare,
-  TrendingUp,
+  Plus,
   Kanban,
-  Zap,
-  Filter
+  CheckCircle2,
+  FolderPlus,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import StatsOverview from '../../components/dashboard/StatsOverview';
-import WorkspaceCard from '../../components/dashboard/WorkspaceCard';
 import RecentActivityList from '../../components/dashboard/RecentActivityList';
-import QuickActions from '../../components/dashboard/QuickActions';
-import ProjectCard from '../../components/projects/ProjectCard';
-import TaskCard from '../../components/projects/TaskCard';
 import TaskModal from '../../components/projects/TaskModal';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
-import Modal from '../../components/common/Modal';
-import Input from '../../components/common/Input';
-import {
-  INITIAL_WORKSPACES,
-  INITIAL_PROJECTS,
-  INITIAL_TASKS,
-  INITIAL_ACTIVITIES,
-  INITIAL_USER
-} from '../../utils/constants';
+import Badge from '../../components/common/Badge';
+import Avatar from '../../components/common/Avatar';
+import EmptyState from '../../components/common/EmptyState';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
+import { useWorkspace } from '../../hooks/useWorkspace';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/common/Toast';
+import api from '../../utils/axios';
+import { normalizeProject, normalizeTask } from '../../utils/normalizers';
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { allWorkspaces, isLoadingWorkspaces, openCreateModal } = useWorkspace();
+  const { addToast } = useToast();
 
-  // Demo State
-  const [workspaces, setWorkspaces] = useState(INITIAL_WORKSPACES);
-  const [projects] = useState(INITIAL_PROJECTS);
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
-  const [activities] = useState(INITIAL_ACTIVITIES);
+  const [projects, setProjects] = useState([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [tasks, setTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [activities, setActivities] = useState([]);
 
-  const [search, setSearch] = useState('');
   const [selectedTask, setSelectedTask] = useState(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isCreateWsOpen, setIsCreateWsOpen] = useState(false);
+  const [activeTaskTab, setActiveTaskTab] = useState('mine'); // 'mine' | 'all'
 
-  // Form states for new workspace
-  const [newWsName, setNewWsName] = useState('');
-  const [newWsDesc, setNewWsDesc] = useState('');
-  const [newWsVisibility, setNewWsVisibility] = useState('Public');
+  const primaryWs = allWorkspaces && allWorkspaces.length > 0 ? (allWorkspaces[0]._id || allWorkspaces[0].id) : null;
+  const currentWorkspace = allWorkspaces && allWorkspaces.length > 0 ? allWorkspaces[0] : null;
 
-  // Tasks assigned to current user
-  const myTasks = tasks.filter((t) => t.assignee?.name === INITIAL_USER.name || t.assignee === INITIAL_USER.name);
+  // Contextual Greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
-  // Overall sprint progress calculation
-  const totalTasksCount = tasks.length;
-  const completedTasksCount = tasks.filter((t) => t.status === 'Done' || t.status === 'Completed').length;
-  const overallProgress = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 75;
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDashboardData = async () => {
+      try {
+        const res = await api.get('/projects');
+        const raw = res.data?.projects || [];
+        const normalized = raw.map((p) => normalizeProject(p));
+        if (isMounted) {
+          setProjects(normalized);
+        }
+      } catch (err) {
+        console.warn('Failed to load dashboard projects:', err);
+      } finally {
+        if (isMounted) setIsLoadingProjects(false);
+      }
 
-  const filteredWorkspaces = workspaces.filter(
-    (w) =>
-      w.name.toLowerCase().includes(search.toLowerCase()) ||
-      w.description.toLowerCase().includes(search.toLowerCase())
-  );
+      if (primaryWs) {
+        // Fetch workspace activities
+        try {
+          const actRes = await api.get(`/workspaces/${primaryWs}/activity?limit=10`);
+          if (isMounted) {
+            setActivities(actRes.data?.activities || []);
+          }
+        } catch (err) {
+          console.warn('Failed to load dashboard activities:', err);
+        }
 
-  const handleCreateWorkspace = (e) => {
-    e.preventDefault();
-    if (!newWsName.trim()) return;
-
-    const created = {
-      id: `ws-${Date.now().toString().slice(-4)}`,
-      name: newWsName,
-      slug: newWsName.toLowerCase().replace(/\s+/g, '-'),
-      description: newWsDesc || 'Newly initialized developer workspace',
-      icon: 'Layers',
-      color: 'from-indigo-500 to-purple-600',
-      visibility: newWsVisibility,
-      techStack: ['React', 'Node.js', 'Docker'],
-      memberCount: 1,
-      projectCount: 0,
-      openIssues: 0,
-      starred: false,
-      updatedAt: 'Just now',
-      owner: INITIAL_USER.name
+        // Fetch workspace tasks
+        try {
+          const tasksRes = await api.get('/tasks', {
+            params: { workspaceId: primaryWs, limit: 50 }
+          });
+          const rawTasks = tasksRes.data?.tasks || [];
+          const normalizedTasks = rawTasks.map((t) => normalizeTask(t));
+          if (isMounted) {
+            setTasks(normalizedTasks);
+          }
+        } catch (err) {
+          console.warn('Failed to load workspace tasks:', err?.response?.data?.message || err.message);
+        } finally {
+          if (isMounted) setIsLoadingTasks(false);
+        }
+      } else {
+        if (isMounted) {
+          setIsLoadingTasks(false);
+        }
+      }
     };
 
-    setWorkspaces([created, ...workspaces]);
-    setIsCreateWsOpen(false);
-    setNewWsName('');
-    setNewWsDesc('');
-    navigate(`/workspace/${created.id}`);
-  };
+    fetchDashboardData();
+    return () => {
+      isMounted = false;
+    };
+  }, [primaryWs]);
+
+  // Tasks assigned to current user
+  const myTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      const assigneeId = t.assignee?.id || t.assignee?._id || (typeof t.assignee === 'string' ? t.assignee : null);
+      const assigneeName = t.assignee?.name || (typeof t.assignee === 'string' ? t.assignee : null);
+      return (
+        (user?.id && assigneeId === user.id) ||
+        (user?._id && assigneeId === user._id) ||
+        (user?.name && assigneeName === user.name)
+      );
+    });
+  }, [tasks, user]);
+
+  // Metric counts
+  const totalTasksCount = tasks.length;
+  const inProgressCount = tasks.filter(
+    (t) => String(t.status).toLowerCase() === 'in progress' || String(t.status).toLowerCase() === 'in-progress'
+  ).length;
+  const completedTasksCount = tasks.filter(
+    (t) => String(t.status).toLowerCase() === 'done' || String(t.status).toLowerCase() === 'completed'
+  ).length;
+  const overallProgress = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+
+  const displayedTasks = activeTaskTab === 'mine' ? myTasks : tasks;
 
   const handleTaskClick = (task) => {
     setSelectedTask(task);
@@ -98,251 +137,357 @@ export function DashboardPage() {
   };
 
   const handleSaveTask = (savedTask) => {
-    setTasks(tasks.map((t) => (t.id === savedTask.id ? savedTask : t)));
+    const norm = normalizeTask(savedTask);
+    const existingIndex = tasks.findIndex((t) => (t.id || t._id) === (norm.id || norm._id));
+    if (existingIndex >= 0) {
+      setTasks(tasks.map((t) => ((t.id || t._id) === (norm.id || norm._id) ? norm : t)));
+      addToast(`Task "${norm.title}" updated`, 'success');
+    } else {
+      setTasks([norm, ...tasks]);
+      addToast(`Task "${norm.title}" created`, 'success');
+    }
+    setIsTaskModalOpen(false);
+  };
+
+  const handleCreateNewTask = () => {
+    setSelectedTask(null);
+    setIsTaskModalOpen(true);
   };
 
   return (
-    <div className="space-y-8">
-      {/* 1. WELCOME MESSAGE & QUICK OVERVIEW BANNER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-panel rounded-2xl p-6 border border-slate-800 relative overflow-hidden shadow-xl">
-        <div className="space-y-1 z-10">
-          <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 font-semibold mb-1">
-            <Terminal className="w-4 h-4 text-cyan-400" />
-            <span>DEVSPACE DASHBOARD</span>
+    <div className="space-y-6">
+      {/* 1. GREETING & WORKSPACE HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E8E8E5] dark:border-[#353535]">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#252525] dark:text-[#F2F2F2] my-0">
+              {greeting}, {user?.name?.split(' ')[0] || 'Developer'}
+            </h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]">
+              <Sparkles className="w-2.5 h-2.5 text-[#252525] dark:text-[#F2F2F2]" />
+              <span>{currentWorkspace?.name || 'Workspace'}</span>
+            </span>
           </div>
-          <h1 className="text-xl sm:text-3xl font-extrabold text-slate-100 my-0 tracking-tight">
-            Welcome back, {INITIAL_USER.name} 👋
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
-            You have <strong className="text-slate-200">{workspaces.length} active workspaces</strong>,{' '}
-            <strong className="text-indigo-400">{myTasks.length} tasks assigned to you</strong>, and{' '}
-            <strong className="text-emerald-400">4 pending PR reviews</strong>.
+          <p className="text-xs text-[#777777] dark:text-[#A0A0A0]">
+            You have <strong className="text-[#252525] dark:text-[#F2F2F2] font-semibold">{myTasks.length} assigned task{myTasks.length === 1 ? '' : 's'}</strong> and{' '}
+            <strong className="text-[#252525] dark:text-[#F2F2F2] font-semibold">{projects.length} project{projects.length === 1 ? '' : 's'}</strong> active across this workspace.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 z-10 shrink-0">
+        {/* Primary Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Plus}
+            onClick={() => {
+              if (primaryWs) {
+                navigate(`/workspace/${primaryWs}/projects`);
+              } else {
+                openCreateModal();
+              }
+            }}
+          >
+            New Project
+          </Button>
           <Button
             variant="primary"
-            size="md"
+            size="sm"
             icon={Plus}
-            onClick={() => setIsCreateWsOpen(true)}
+            onClick={handleCreateNewTask}
           >
-            Create Workspace
+            New Task
           </Button>
         </div>
-
-        {/* Ambient glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Key Metrics Stats */}
-      <StatsOverview />
-
-      {/* Quick Action Shortcuts */}
-      <QuickActions
-        onOpenNewWorkspace={() => setIsCreateWsOpen(true)}
-        onOpenNewProject={() => navigate('/workspace/ws-core-platform/projects')}
-        onOpenInviteMember={() => navigate('/workspace/ws-core-platform/members')}
+      {/* 2. COMPACT NOTION OVERVIEW METRICS */}
+      <StatsOverview
+        projectsCount={projects.length}
+        tasksCount={totalTasksCount}
+        inProgressCount={inProgressCount}
+        completedCount={completedTasksCount}
       />
 
-      {/* 2. PROJECT PROGRESS OVERVIEW SECTION */}
-      <Card hoverable={false} className="space-y-4 border border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
-          <div>
-            <h2 className="text-base font-bold text-slate-100 my-0">Sprint Progress & Velocity Overview</h2>
-            <p className="text-xs text-slate-400">Overall completion metrics across active workspace repositories</p>
+      {/* 3. WORKSPACE VELOCITY & PROGRESS BANNER */}
+      {totalTasksCount > 0 && (
+        <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2]">
+                  Workspace Sprint Velocity
+                </span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] border border-[#E8E8E5] dark:border-[#353535]">
+                  {overallProgress}% Done
+                </span>
+              </div>
+              <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                {completedTasksCount} of {totalTasksCount} issues completed · {inProgressCount} in progress
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-64">
+              <div className="flex-1 h-2 rounded-full bg-[#F1F1EF] dark:bg-[#2A2A2A] overflow-hidden border border-[#E8E8E5] dark:border-[#353535]">
+                <div
+                  className="h-full bg-[#252525] dark:bg-[#F2F2F2] rounded-full transition-all duration-300"
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={Kanban}
+                onClick={() => {
+                  if (projects.length > 0 && primaryWs) {
+                    navigate(`/workspace/${primaryWs}/projects/${projects[0].id || projects[0]._id}/board`);
+                  } else if (primaryWs) {
+                    navigate(`/workspace/${primaryWs}/projects`);
+                  }
+                }}
+                className="shrink-0 text-xs h-7"
+              >
+                Board
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Sprint Velocity: 24 Story Points / wk</span>
+        </Card>
+      )}
+
+      {/* 4. MAIN CONTENT GRID: MY TASKS (LEFT 7 COLS) & RECENT PROJECTS (RIGHT 5 COLS) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Tasks Section */}
+        <div className="lg:col-span-7 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-[#353535]">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+                Tasks
+              </h2>
+              {/* Tab Selector: Mine vs All */}
+              <div className="inline-flex items-center p-0.5 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] border border-[#E8E8E5] dark:border-[#353535]">
+                <button
+                  type="button"
+                  onClick={() => setActiveTaskTab('mine')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                    activeTaskTab === 'mine'
+                      ? 'bg-[#FFFFFF] dark:bg-[#202020] text-[#252525] dark:text-[#F2F2F2] shadow-2xs font-semibold'
+                      : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
+                  }`}
+                >
+                  Assigned to me ({myTasks.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTaskTab('all')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                    activeTaskTab === 'all'
+                      ? 'bg-[#FFFFFF] dark:bg-[#202020] text-[#252525] dark:text-[#F2F2F2] shadow-2xs font-semibold'
+                      : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
+                  }`}
+                >
+                  All ({totalTasksCount})
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleCreateNewTask}
+              className="text-xs text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors cursor-pointer font-medium"
+            >
+              + Add Task
+            </button>
           </div>
+
+          {isLoadingTasks ? (
+            <div className="space-y-2">
+              <SkeletonLoader variant="table-row" count={4} />
+            </div>
+          ) : displayedTasks.length > 0 ? (
+            <div className="rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] divide-y divide-[#E8E8E5] dark:divide-[#353535] overflow-hidden">
+              {displayedTasks.slice(0, 8).map((task) => (
+                <div
+                  key={task.id || task._id}
+                  onClick={() => handleTaskClick(task)}
+                  className="flex items-center justify-between p-3 hover:bg-[#F9F9F8] dark:hover:bg-[#262626] transition-colors cursor-pointer gap-3 group"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535] shrink-0">
+                      {task.issueKey || 'DEV'}
+                    </span>
+                    <span className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] truncate group-hover:underline">
+                      {task.title}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge priority={task.priority} size="sm" />
+                    <Badge status={task.status} size="sm" />
+                    {task.assignee && (
+                      <Avatar
+                        src={task.assignee.avatar}
+                        name={task.assignee.name || 'User'}
+                        size="xs"
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={CheckCircle2}
+              title={activeTaskTab === 'mine' ? 'No tasks assigned to you' : 'No workspace tasks'}
+              description={
+                activeTaskTab === 'mine'
+                  ? "You're all caught up! You can browse all tasks or create a new one."
+                  : 'Start by creating your first task in this workspace.'
+              }
+              actionLabel="Create Task"
+              onAction={handleCreateNewTask}
+              className="py-8"
+            />
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs font-mono">
-              <span className="text-slate-400">Total Completion Rate</span>
-              <span className="text-emerald-400 font-bold">{overallProgress}%</span>
-            </div>
-            <div className="w-full h-3 rounded-full bg-slate-900 border border-slate-800 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-slate-500 font-mono">
-              {completedTasksCount} of {totalTasksCount} sprint tasks marked completed
-            </p>
+        {/* Recent Projects Section */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-[#353535]">
+            <h2 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+              Projects ({projects.length})
+            </h2>
+            {primaryWs && (
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={ArrowRight}
+                onClick={() => navigate(`/workspace/${primaryWs}/projects`)}
+                className="text-xs h-7"
+              >
+                View all
+              </Button>
+            )}
           </div>
 
-          <div className="flex items-center justify-around text-center py-2 bg-slate-900/50 rounded-xl border border-slate-800/80">
-            <div>
-              <span className="text-xs font-semibold uppercase text-slate-400 block">Open PRs</span>
-              <span className="text-lg font-bold text-cyan-400">6 PRs</span>
+          {isLoadingProjects ? (
+            <div className="space-y-2">
+              <SkeletonLoader variant="card" count={3} />
             </div>
-            <div className="h-8 w-px bg-slate-800" />
-            <div>
-              <span className="text-xs font-semibold uppercase text-slate-400 block">Active Repos</span>
-              <span className="text-lg font-bold text-indigo-400">{projects.length} Repos</span>
-            </div>
-            <div className="h-8 w-px bg-slate-800" />
-            <div>
-              <span className="text-xs font-semibold uppercase text-slate-400 block">Deploy Status</span>
-              <span className="text-lg font-bold text-emerald-400">100% Healthy</span>
-            </div>
-          </div>
+          ) : projects.length > 0 ? (
+            <div className="space-y-2">
+              {projects.slice(0, 4).map((proj) => (
+                <div
+                  key={proj.id || proj._id}
+                  onClick={() => {
+                    const wsId = proj.workspaceId || primaryWs;
+                    navigate(`/workspace/${wsId}/projects/${proj.id || proj._id}/board`);
+                  }}
+                  className="p-3 rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] hover:border-[#252525] dark:hover:border-[#777777] transition-colors cursor-pointer space-y-2 group"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-6 h-6 rounded bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] flex items-center justify-center font-bold text-[10px] shrink-0">
+                        {proj.key ? proj.key.slice(0, 3) : 'PRJ'}
+                      </div>
+                      <span className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2] truncate group-hover:underline">
+                        {proj.name}
+                      </span>
+                    </div>
+                    <Badge status={proj.status} size="sm" />
+                  </div>
 
-          <div className="flex justify-end">
+                  {proj.description && (
+                    <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0] line-clamp-1">
+                      {proj.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between text-[10px] text-[#999999] dark:text-[#777777] pt-1">
+                    <span>{proj.completedTasksCount || 0} / {proj.totalTasksCount || 0} completed</span>
+                    <span className="font-mono">{proj.progress || 0}%</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-[#F1F1EF] dark:bg-[#2A2A2A] overflow-hidden">
+                    <div
+                      className="h-full bg-[#252525] dark:bg-[#F2F2F2] rounded-full transition-all duration-300"
+                      style={{ width: `${proj.progress || 0}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={FolderGit2}
+              title="No projects yet"
+              description="Create a project to organize sprints, backlogs, and tasks."
+              actionLabel="Create Project"
+              onAction={() => {
+                if (primaryWs) {
+                  navigate(`/workspace/${primaryWs}/projects`);
+                } else {
+                  openCreateModal();
+                }
+              }}
+              className="py-8"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* 5. WORKSPACE ACTIVITY STREAM */}
+      <RecentActivityList activities={activities} />
+
+      {/* 6. ALL WORKSPACES GRID IF MULTIPLE EXIST */}
+      {allWorkspaces && allWorkspaces.length > 1 && (
+        <div className="space-y-3 pt-2 border-t border-[#E8E8E5] dark:border-[#353535]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+                All Workspaces ({allWorkspaces.length})
+              </h2>
+              <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0] mt-0.5">
+                Switch workspaces to access other teams and projects
+              </p>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              icon={Kanban}
-              onClick={() => navigate('/workspace/ws-core-platform/projects/proj-auth-service/board')}
+              icon={FolderPlus}
+              onClick={openCreateModal}
+              className="text-xs h-7"
             >
-              Open Full Kanban Board
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* 3. WORKSPACE CARDS GRID */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800">
-          <div>
-            <h2 className="text-base font-bold text-slate-100 my-0">Workspaces ({filteredWorkspaces.length})</h2>
-            <p className="text-xs text-slate-400">Select a workspace to view team members, microservices & sprint boards</p>
-          </div>
-
-          <div className="relative max-w-xs w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search workspaces..."
-              className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filteredWorkspaces.map((ws) => (
-            <WorkspaceCard key={ws.id} workspace={ws} />
-          ))}
-        </div>
-      </div>
-
-      {/* 4. RECENT PROJECTS & TASKS ASSIGNED TO ME */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Projects Repositories (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-slate-100 my-0">Recent Repositories & Projects</h2>
-              <p className="text-xs text-slate-400">Active software repositories across your workspaces</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/workspace/ws-core-platform/projects')}
-            >
-              View All
+              Add Workspace
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {projects.map((proj) => (
-              <ProjectCard key={proj.id} project={proj} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {allWorkspaces.map((ws) => (
+              <div
+                key={ws.id || ws._id}
+                onClick={() => navigate(`/workspace/${ws.id || ws._id}`)}
+                className="p-3 rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] hover:border-[#252525] dark:hover:border-[#777777] transition-colors cursor-pointer flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <div className="w-7 h-7 rounded-md bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] flex items-center justify-center font-bold text-xs shrink-0">
+                    {ws.name ? ws.name.charAt(0).toUpperCase() : 'W'}
+                  </div>
+                  <div className="truncate">
+                    <p className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2] truncate my-0">
+                      {ws.name}
+                    </p>
+                    <p className="text-[10px] text-[#777777] dark:text-[#A0A0A0] truncate">
+                      {ws.projectCount || 0} projects · {ws.memberCount || 1} members
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-[#999999] shrink-0" />
+              </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* Tasks Assigned To Me (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-            <div>
-              <h2 className="text-base font-bold text-slate-100 my-0">Tasks Assigned to Me ({myTasks.length})</h2>
-              <p className="text-xs text-slate-400">Sprint issues requiring your attention</p>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 text-[10px] font-mono border border-indigo-500/20">
-              Assigned
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {myTasks.length > 0 ? (
-              myTasks.map((t) => (
-                <TaskCard key={t.id} task={t} onClick={() => handleTaskClick(t)} />
-              ))
-            ) : (
-              <p className="text-xs text-slate-500 text-center py-6 border border-dashed border-slate-800 rounded-xl font-mono">
-                No open tasks assigned to you right now.
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 5. RECENT TEAM ACTIVITY STREAM */}
-      <RecentActivityList activities={activities} />
-
-      {/* Create Workspace Modal */}
-      <Modal
-        isOpen={isCreateWsOpen}
-        onClose={() => setIsCreateWsOpen(false)}
-        title="Create New Workspace"
-        subtitle="Group projects, assign team permissions, and sync repositories"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setIsCreateWsOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleCreateWorkspace}>
-              Create Workspace
-            </Button>
-          </>
-        }
-      >
-        <form onSubmit={handleCreateWorkspace} className="space-y-4">
-          <Input
-            label="Workspace Name"
-            required
-            placeholder="e.g. Cloud Security Team"
-            value={newWsName}
-            onChange={(e) => setNewWsName(e.target.value)}
-          />
-
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              value={newWsDesc}
-              onChange={(e) => setNewWsDesc(e.target.value)}
-              placeholder="Primary mission and microservices in this workspace..."
-              className="w-full rounded-lg bg-slate-900/90 border border-slate-700/80 px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Visibility
-            </label>
-            <select
-              value={newWsVisibility}
-              onChange={(e) => setNewWsVisibility(e.target.value)}
-              className="w-full rounded-lg bg-slate-900 border border-slate-700 px-3.5 py-2 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none"
-            >
-              <option value="Public">Public (Anyone in organization can view)</option>
-              <option value="Private">Private (Members only)</option>
-              <option value="Internal">Internal (Strict SSO restricted)</option>
-            </select>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Task Inspection Modal */}
+      {/* Global Task Inspection / Creation Modal */}
       <TaskModal
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}

@@ -1,60 +1,59 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Terminal, Zap, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import Button from '../common/Button';
 
 export function CtaSection() {
   const navigate = useNavigate();
 
   return (
-    <section id="cta" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="relative glass-panel rounded-3xl p-8 sm:p-14 border border-indigo-500/30 overflow-hidden shadow-2xl glow-primary text-center space-y-6">
-        {/* Background ambient glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-cyan-500/20 opacity-60 pointer-events-none" />
-
-        <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-mono border border-indigo-500/30">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Ready to Level Up Your Engineering Team?</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-100 tracking-tight my-0 leading-tight">
-            Start Collaborating on DevSpace Today
+    <section id="capabilities" className="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+      <div className="rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#202020] p-8 sm:p-12 text-center space-y-6">
+        <div className="space-y-2 max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-[#252525] dark:text-[#F2F2F2] tracking-tight my-0">
+            Ready to organize your engineering team?
           </h2>
-
-          <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-            Join thousands of developers building microservices, tracking sprints, and streamlining code reviews in one sleek workspace.
+          <p className="text-xs sm:text-sm text-[#777777] dark:text-[#A0A0A0] leading-relaxed">
+            Create your workspace in seconds. Plan sprints, track issues, and collaborate with clarity.
           </p>
         </div>
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
             variant="primary"
-            size="lg"
+            size="md"
             icon={ArrowRight}
             onClick={() => navigate('/register')}
-            className="w-full sm:w-auto text-base px-8 py-3"
+            className="w-full sm:w-auto h-9 px-5 text-xs font-medium"
           >
-            Create Free Account
+            Get Started Free
           </Button>
 
           <Button
             variant="outline"
-            size="lg"
-            icon={Terminal}
-            onClick={() => navigate('/dashboard')}
-            className="w-full sm:w-auto text-base px-8 py-3"
+            size="md"
+            onClick={() => navigate('/login')}
+            className="w-full sm:w-auto h-9 px-5 text-xs font-medium"
           >
-            Explore Dashboard Demo
+            Sign In to Workspace
           </Button>
         </div>
 
-        <div className="relative z-10 pt-4 flex items-center justify-center gap-6 text-xs text-slate-400 font-mono">
-          <span>✓ Free 14-day trial</span>
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#777777] dark:text-[#A0A0A0] pt-2">
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#107C41] dark:text-[#4EBE7E]" />
+            <span>Instant provisioning</span>
+          </div>
           <span>•</span>
-          <span>✓ Instant setup</span>
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#107C41] dark:text-[#4EBE7E]" />
+            <span>Granular role permissions</span>
+          </div>
           <span>•</span>
-          <span>✓ Cancel anytime</span>
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#107C41] dark:text-[#4EBE7E]" />
+            <span>No credit card required</span>
+          </div>
         </div>
       </div>
     </section>

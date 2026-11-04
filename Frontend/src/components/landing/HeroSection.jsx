@@ -1,77 +1,74 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, ArrowRight, Terminal, Play, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
 import Button from '../common/Button';
 import DashboardPreviewMockup from './DashboardPreviewMockup';
 
 export function HeroSection() {
   const navigate = useNavigate();
 
-  return (
-    <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center space-y-8 overflow-hidden">
-      {/* Background Radial Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[450px] bg-gradient-to-b from-indigo-600/20 via-purple-600/10 to-transparent blur-3xl pointer-events-none" />
+  const scrollToFeatures = () => {
+    const el = document.getElementById('features');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-      {/* Release Pill Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card border border-indigo-500/30 text-xs font-mono text-indigo-300 shadow-xl shadow-indigo-950/20 animate-in fade-in slide-in-from-top duration-500">
-        <Zap className="w-3.5 h-3.5 text-cyan-400" />
-        <span>DevSpace v2.4 — Next-Gen Developer Collaboration OS</span>
+  return (
+    <section className="pt-12 sm:pt-16 pb-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-8">
+      {/* Release Tag Pill */}
+      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#F1F1EF] dark:bg-[#242424] border border-[#E8E8E5] dark:border-[#353535] text-xs font-mono text-[#777777] dark:text-[#A0A0A0]">
+        <Layers className="w-3.5 h-3.5 text-[#252525] dark:text-[#F2F2F2]" />
+        <span>DevSpace 2.0 — Agile & Workspace Management</span>
       </div>
 
-      {/* Main Headline */}
-      <div className="max-w-4xl mx-auto space-y-4">
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-100 my-0 leading-[1.08]">
-          One Unified Workspace for{' '}
-          <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-300 bg-clip-text text-transparent">
-            Modern Developer Teams
-          </span>
+      {/* Main Headline & Supporting Text */}
+      <div className="space-y-4 max-w-3xl mx-auto">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[#252525] dark:text-[#F2F2F2] leading-[1.12]">
+          Your team's work, organized in one place.
         </h1>
 
-        <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-          Streamline multi-repo code reviews, sprint boards, team communications, and automated CI workflows in one centralized developer hub.
+        <p className="text-sm sm:text-lg text-[#777777] dark:text-[#A0A0A0] max-w-2xl mx-auto leading-relaxed font-normal">
+          Plan projects, manage tasks, collaborate with your team, and keep every milestone on track with DevSpace.
         </p>
       </div>
 
       {/* CTA Buttons */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
         <Button
           variant="primary"
-          size="lg"
+          size="md"
           icon={ArrowRight}
           onClick={() => navigate('/register')}
-          className="w-full sm:w-auto text-base px-7 py-3"
+          className="w-full sm:w-auto h-9 px-5 text-xs font-medium"
         >
-          Get Started Free
+          Get Started
         </Button>
 
         <Button
           variant="outline"
-          size="lg"
-          icon={Play}
-          onClick={() => navigate('/dashboard')}
-          className="w-full sm:w-auto text-base px-7 py-3"
+          size="md"
+          onClick={scrollToFeatures}
+          className="w-full sm:w-auto h-9 px-5 text-xs font-medium"
         >
-          View Interactive Demo
+          Explore Features
         </Button>
       </div>
 
       {/* Trust Highlights */}
-      <div className="flex flex-wrap items-center justify-center gap-6 pt-2 text-xs text-slate-400 font-mono">
+      <div className="flex items-center justify-center gap-6 text-xs text-[#777777] dark:text-[#A0A0A0] pt-2">
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#107C41] dark:text-[#4EBE7E]" />
           <span>No credit card required</span>
         </div>
+        <span>•</span>
         <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>Instant GitHub Sync</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span>Unlimited Public Workspaces</span>
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#107C41] dark:text-[#4EBE7E]" />
+          <span>Instant workspace setup</span>
         </div>
       </div>
 
-      {/* Product Preview Mockup */}
+      {/* Realistic Product Showcase Mockup */}
       <div className="pt-6">
         <DashboardPreviewMockup />
       </div>

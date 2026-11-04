@@ -1,36 +1,34 @@
 import React from 'react';
 import { Plus, GitBranch, UserPlus, Terminal } from 'lucide-react';
-import Card from '../common/Card';
+import { useToast } from '../common/Toast';
 
 export function QuickActions({ onOpenNewWorkspace, onOpenNewProject, onOpenInviteMember }) {
+  const { addToast } = useToast();
+
   const actions = [
     {
       title: 'Create Workspace',
-      desc: 'Setup a new team organization',
+      desc: 'Set up an organization',
       icon: Plus,
-      color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20',
       onClick: onOpenNewWorkspace
     },
     {
-      title: 'New Repository',
-      desc: 'Initialize a microservice or app',
+      title: 'New Project',
+      desc: 'Initialize a project or service',
       icon: GitBranch,
-      color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20',
       onClick: onOpenNewProject
     },
     {
-      title: 'Invite Team Member',
-      desc: 'Grant permissions to collaborators',
+      title: 'Invite Teammate',
+      desc: 'Grant workspace access',
       icon: UserPlus,
-      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
       onClick: onOpenInviteMember
     },
     {
-      title: 'Connect GitHub / GitLab',
-      desc: 'Sync repos and webhook triggers',
+      title: 'Version Control',
+      desc: 'Connect Git repositories',
       icon: Terminal,
-      color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-      onClick: () => alert('GitHub OAuth sync triggered!')
+      onClick: () => addToast('Git repository integration is active.', 'info')
     }
   ];
 
@@ -43,16 +41,18 @@ export function QuickActions({ onOpenNewWorkspace, onOpenNewProject, onOpenInvit
             key={i}
             type="button"
             onClick={act.onClick}
-            className="glass-card rounded-xl p-4 text-left transition-all hover:-translate-y-0.5 hover:border-slate-700 flex items-center gap-3 cursor-pointer group"
+            className="p-3.5 rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] hover:bg-[#F7F7F5] dark:hover:bg-[#262626] transition-colors text-left flex items-center gap-3 cursor-pointer group"
           >
-            <div className={`p-2.5 rounded-lg border ${act.color} group-hover:scale-105 transition-transform`}>
+            <div className="w-8 h-8 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] border border-[#E8E8E5] dark:border-[#353535] flex items-center justify-center text-[#252525] dark:text-[#F2F2F2] shrink-0">
               <Icon className="w-4 h-4" />
             </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">
+            <div className="min-w-0">
+              <h4 className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2] my-0 truncate">
                 {act.title}
               </h4>
-              <p className="text-[11px] text-slate-400 leading-tight">{act.desc}</p>
+              <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0] leading-tight my-0 truncate">
+                {act.desc}
+              </p>
             </div>
           </button>
         );

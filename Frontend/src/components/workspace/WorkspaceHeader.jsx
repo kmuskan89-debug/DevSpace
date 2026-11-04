@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Plus, UserPlus, Settings, GitBranch, Globe, Lock } from 'lucide-react';
+import { Layers, Plus, UserPlus, Settings, Globe, Lock } from 'lucide-react';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
 

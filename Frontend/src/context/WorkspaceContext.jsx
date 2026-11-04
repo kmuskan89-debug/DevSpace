@@ -1,0 +1,365 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import api from '../utils/axios';
+import { useAuth } from './AuthContext';
+import { normalizeWorkspace } from '../utils/normalizers';
+
+export { normalizeWorkspace };
+
+const WorkspaceContext = createContext(null);
+
+export function WorkspaceProvider({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  const [workspaces, setWorkspaces] = useState([]);
+  const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Cache for members and invitations by workspace ID
+  const [membersByWorkspace, setMembersByWorkspace] = useState({});
+  const [invitationsByWorkspace, setInvitationsByWorkspace] = useState({});
+  const [activitiesByWorkspace, setActivitiesByWorkspace] = useState({});
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [isLoadingInvitations, setIsLoadingInvitations] = useState(false);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Fetch workspaces from MongoDB
+  const fetchWorkspaces = useCallback(async () => {
+    if (!isAuthenticated) {
+      setWorkspaces([]);
+      setIsLoadingWorkspaces(false);
+      return;
+    }
+
+    setIsLoadingWorkspaces(true);
+    setError(null);
+
+    try {
+      const response = await api.get('/workspaces');
+      const rawList = response.data?.workspaces || [];
+      const normalizedList = rawList.map(normalizeWorkspace);
+      setWorkspaces(normalizedList);
+    } catch (err) {
+      console.error('Failed to fetch workspaces from database:', err?.response?.data?.message || err.message);
+      setError(err?.response?.data?.message || 'Failed to load workspaces');
+    } finally {
+      setIsLoadingWorkspaces(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchWorkspaces();
+  }, [fetchWorkspaces]);
+
+  // Find a workspace by ID, _id, or slug
+  const getWorkspace = useCallback((idOrSlug) => {
+    if (!idOrSlug) {
+      return workspaces[0] || null;
+    }
+    const found = workspaces.find(
+      (w) => w.id === idOrSlug || w.slug === idOrSlug || w._id === idOrSlug
+    );
+    return found || null;
+  }, [workspaces]);
+
+  // Fetch real workspace members from MongoDB
+  const fetchMembers = useCallback(async (workspaceId) => {
+    if (!workspaceId) return [];
+
+    setIsLoadingMembers(true);
+    try {
+      const res = await api.get(`/workspaces/${workspaceId}/members`);
+      const rawMembers = res.data?.members || [];
+      const normalizedMembers = rawMembers.map((m) => {
+        const uId = m.user?._id || m.user?.id || m._id;
+        return {
+          id: uId,
+          _id: uId,
+          userId: uId,
+          name: m.user?.name || 'Collaborator',
+          email: m.user?.email || '',
+          avatar: m.user?.avatar || '',
+          role: m.role || 'Member',
+          status: 'Active',
+          commits: 0,
+          prMerged: 0,
+          joinedDate: m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : 'Active member'
+        };
+      });
+
+      setMembersByWorkspace((prev) => ({
+        ...prev,
+        [workspaceId]: normalizedMembers
+      }));
+
+      return normalizedMembers;
+    } catch (err) {
+      console.error('Failed to fetch workspace members:', err);
+      return [];
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  }, []);
+
+  // Fetch pending invitations for workspace
+  const fetchInvitations = useCallback(async (workspaceId) => {
+    if (!workspaceId) return [];
+
+    setIsLoadingInvitations(true);
+    try {
+      const res = await api.get(`/workspaces/${workspaceId}/invitations`);
+      const rawInvitations = res.data?.invitations || [];
+      setInvitationsByWorkspace((prev) => ({
+        ...prev,
+        [workspaceId]: rawInvitations
+      }));
+      return rawInvitations;
+    } catch (err) {
+      console.warn('Failed to fetch workspace invitations:', err?.response?.data?.message || err.message);
+      return [];
+    } finally {
+      setIsLoadingInvitations(false);
+    }
+  }, []);
+
+  // Fetch persistent workspace activity logs
+  const fetchActivities = useCallback(async (workspaceId, filterResourceType = null) => {
+    if (!workspaceId) return [];
+
+    setIsLoadingActivities(true);
+    try {
+      const url = filterResourceType
+        ? `/workspaces/${workspaceId}/activity?resourceType=${filterResourceType}&limit=30`
+        : `/workspaces/${workspaceId}/activity?limit=30`;
+      const res = await api.get(url);
+      const rawActivities = res.data?.activities || [];
+      setActivitiesByWorkspace((prev) => ({
+        ...prev,
+        [workspaceId]: rawActivities
+      }));
+      return rawActivities;
+    } catch (err) {
+      console.warn('Failed to fetch workspace activities:', err?.response?.data?.message || err.message);
+      return [];
+    } finally {
+      setIsLoadingActivities(false);
+    }
+  }, []);
+
+  // Get cached members or fallback to empty
+  const getMembers = useCallback((workspaceId) => {
+    if (!workspaceId) return [];
+    if (membersByWorkspace[workspaceId]) {
+      return membersByWorkspace[workspaceId];
+    }
+    const targetWs = workspaces.find((w) => w.id === workspaceId || w.slug === workspaceId);
+    if (targetWs && targetWs.members && targetWs.members.length > 0) {
+      return targetWs.members.map((m, idx) => ({
+        id: m.user?._id || `mem-${idx}`,
+        _id: m.user?._id || `mem-${idx}`,
+        name: m.user?.name || (idx === 0 ? (targetWs.owner || user?.name || 'Owner') : 'Team Member'),
+        email: m.user?.email || '',
+        role: m.role || 'Member',
+        status: 'Active',
+        avatar: '',
+        commits: 0,
+        prMerged: 0,
+        joinedDate: m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : 'Active member'
+      }));
+    }
+    return [];
+  }, [membersByWorkspace, workspaces, user]);
+
+  // Create a new workspace in MongoDB
+  const createWorkspace = async ({ name, description, icon = 'Layers', color = 'from-indigo-500 to-purple-600', visibility = 'Public' }) => {
+    const cleanName = name?.trim();
+    if (!cleanName) {
+      throw new Error('Workspace name is required.');
+    }
+
+    const response = await api.post('/workspaces', {
+      name: cleanName,
+      description: description?.trim() || '',
+      icon,
+      color,
+      visibility
+    });
+
+    const created = normalizeWorkspace(response.data.workspace);
+    setWorkspaces((prev) => [created, ...prev]);
+
+    return created;
+  };
+
+  // Update existing workspace in MongoDB
+  const updateWorkspace = async (workspaceId, fields) => {
+    try {
+      const response = await api.put(`/workspaces/${workspaceId}`, fields);
+      const updated = normalizeWorkspace(response.data.workspace);
+      setWorkspaces((prev) =>
+        prev.map((w) => (w.id === workspaceId || w.slug === workspaceId ? updated : w))
+      );
+      return updated;
+    } catch (err) {
+      console.error('Failed to update workspace in database:', err);
+      throw new Error(err.response?.data?.message || 'Failed to update workspace');
+    }
+  };
+
+  // Delete a workspace in MongoDB
+  const deleteWorkspace = async (workspaceId) => {
+    try {
+      await api.delete(`/workspaces/${workspaceId}`);
+      setWorkspaces((prev) => prev.filter((w) => w.id !== workspaceId && w.slug !== workspaceId));
+      setMembersByWorkspace((prev) => {
+        const nextMap = { ...prev };
+        delete nextMap[workspaceId];
+        return nextMap;
+      });
+      setInvitationsByWorkspace((prev) => {
+        const nextMap = { ...prev };
+        delete nextMap[workspaceId];
+        return nextMap;
+      });
+    } catch (err) {
+      console.error('Failed to delete workspace in database:', err);
+      throw new Error(err.response?.data?.message || 'Failed to delete workspace');
+    }
+  };
+
+  // Invite member via Backend API
+  const inviteMember = async (workspaceId, { email, role = 'Member' }) => {
+    const cleanEmail = email?.trim().toLowerCase();
+    if (!cleanEmail) {
+      throw new Error('Please enter a valid email address.');
+    }
+
+    const res = await api.post(`/workspaces/${workspaceId}/invitations`, {
+      email: cleanEmail,
+      role
+    });
+
+    // Refresh pending invitations list
+    await fetchInvitations(workspaceId);
+
+    return {
+      invitation: res.data?.invitation,
+      token: res.data?.invitationToken || res.data?.invitation?.token,
+      url: res.data?.invitationUrl
+    };
+  };
+
+  // Revoke an invitation via Backend API
+  const revokeInvitation = async (workspaceId, invitationId) => {
+    await api.delete(`/workspaces/${workspaceId}/invitations/${invitationId}`);
+    setInvitationsByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).filter((inv) => inv._id !== invitationId)
+    }));
+  };
+
+  // Update member role via Backend API
+  const updateMemberRole = async (workspaceId, memberId, newRole) => {
+    const res = await api.patch(`/workspaces/${workspaceId}/members/${memberId}/role`, {
+      role: newRole
+    });
+
+    setMembersByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).map((m) =>
+        m.id === memberId || m._id === memberId ? { ...m, role: newRole } : m
+      )
+    }));
+
+    return res.data;
+  };
+
+  // Remove member via Backend API
+  const removeMember = async (workspaceId, memberId) => {
+    await api.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+
+    setMembersByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).filter((m) => m.id !== memberId && m._id !== memberId)
+    }));
+
+    setWorkspaces((prev) =>
+      prev.map((w) =>
+        w.id === workspaceId ? { ...w, memberCount: Math.max(0, (w.memberCount || 1) - 1) } : w
+      )
+    );
+  };
+
+  const openCreateModal = useCallback(() => setIsCreateModalOpen(true), []);
+  const closeCreateModal = useCallback(() => setIsCreateModalOpen(false), []);
+
+  const value = React.useMemo(() => ({
+    workspaces,
+    isLoadingWorkspaces,
+    error,
+    fetchWorkspaces,
+    getWorkspace,
+    getMembers,
+    membersByWorkspace,
+    invitationsByWorkspace,
+    activitiesByWorkspace,
+    isLoadingMembers,
+    isLoadingInvitations,
+    isLoadingActivities,
+    fetchMembers,
+    fetchInvitations,
+    fetchActivities,
+    createWorkspace,
+    updateWorkspace,
+    deleteWorkspace,
+    inviteMember,
+    revokeInvitation,
+    updateMemberRole,
+    removeMember,
+    isCreateModalOpen,
+    openCreateModal,
+    closeCreateModal
+  }), [
+    workspaces,
+    isLoadingWorkspaces,
+    error,
+    fetchWorkspaces,
+    getWorkspace,
+    getMembers,
+    membersByWorkspace,
+    invitationsByWorkspace,
+    activitiesByWorkspace,
+    isLoadingMembers,
+    isLoadingInvitations,
+    isLoadingActivities,
+    fetchMembers,
+    fetchInvitations,
+    fetchActivities,
+    createWorkspace,
+    updateWorkspace,
+    deleteWorkspace,
+    inviteMember,
+    revokeInvitation,
+    updateMemberRole,
+    removeMember,
+    isCreateModalOpen,
+    openCreateModal,
+    closeCreateModal
+  ]);
+
+  return (
+    <WorkspaceContext.Provider value={value}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
+}
+
+export function useWorkspaceContext() {
+  const context = useContext(WorkspaceContext);
+  if (!context) {
+    throw new Error('useWorkspaceContext must be used within a WorkspaceProvider');
+  }
+  return context;
+}
+
+export default WorkspaceContext;

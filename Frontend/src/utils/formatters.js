@@ -13,34 +13,36 @@ export function getStatusBadgeStyle(status) {
     case 'done':
     case 'completed':
     case 'success':
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      return 'bg-[#EBF8F1] dark:bg-[rgba(78,190,126,0.12)] text-[#107C41] dark:text-[#4EBE7E] border border-[#D1F0DE] dark:border-[rgba(78,190,126,0.25)]';
     case 'in progress':
+    case 'in-progress':
     case 'code review':
     case 'review':
-      return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
+      return 'bg-[#EFF6FC] dark:bg-[rgba(96,165,250,0.12)] text-[#0078D4] dark:text-[#60A5FA] border border-[#C7E0F4] dark:border-[rgba(96,165,250,0.25)]';
     case 'to do':
+    case 'todo':
     case 'pending':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      return 'bg-[#FEF8ED] dark:bg-[rgba(251,191,36,0.12)] text-[#B26B00] dark:text-[#FBBF24] border border-[#FBE5C3] dark:border-[rgba(251,191,36,0.25)]';
     case 'urgent':
     case 'high':
     case 'danger':
-      return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      return 'bg-[#FDF3F2] dark:bg-[rgba(248,113,113,0.12)] text-[#D83B01] dark:text-[#F87171] border border-[#F9D5D3] dark:border-[rgba(248,113,113,0.25)]';
     default:
-      return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      return 'bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]';
   }
 }
 
 export function getPriorityBadgeStyle(priority) {
   switch (priority?.toLowerCase()) {
     case 'urgent':
-      return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+      return 'bg-[#FDF3F2] dark:bg-[rgba(248,113,113,0.12)] text-[#D83B01] dark:text-[#F87171] border border-[#F9D5D3] dark:border-[rgba(248,113,113,0.25)]';
     case 'high':
-      return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+      return 'bg-[#FEF8ED] dark:bg-[rgba(251,191,36,0.12)] text-[#B26B00] dark:text-[#FBBF24] border border-[#FBE5C3] dark:border-[rgba(251,191,36,0.25)]';
     case 'medium':
-      return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+      return 'bg-[#EFF6FC] dark:bg-[rgba(96,165,250,0.12)] text-[#0078D4] dark:text-[#60A5FA] border border-[#C7E0F4] dark:border-[rgba(96,165,250,0.25)]';
     case 'low':
-      return 'bg-slate-500/20 text-slate-300 border-slate-500/30';
+      return 'bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]';
     default:
-      return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      return 'bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535]';
   }
 }

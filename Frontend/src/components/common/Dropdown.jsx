@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Dropdown({
   trigger,
@@ -25,13 +26,19 @@ export function Dropdown({
     <div className="relative inline-block text-left" ref={menuRef}>
       <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
 
-      {isOpen && (
-        <div
-          className={`absolute ${alignmentClass} mt-2 ${width} glass-panel rounded-xl shadow-2xl border border-slate-700/80 p-1 z-50 animate-in fade-in zoom-in-95 duration-150`}
-        >
-          <div onClick={() => setIsOpen(false)}>{children}</div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: -2 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: -2 }}
+            transition={{ duration: 0.1, ease: 'easeOut' }}
+            className={`absolute ${alignmentClass} mt-1.5 ${width} rounded-md border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] shadow-md p-1 z-50`}
+          >
+            <div onClick={() => setIsOpen(false)}>{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -41,14 +48,14 @@ export function DropdownItem({ children, icon: Icon, onClick, danger = false, cl
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors text-left ${
+      className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium rounded transition-colors text-left cursor-pointer focus:outline-none ${
         danger
-          ? 'text-rose-400 hover:bg-rose-500/10'
-          : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+          ? 'text-[#D83B01] dark:text-[#F87171] hover:bg-[#FDF3F2] dark:hover:bg-[rgba(248,113,113,0.12)]'
+          : 'text-[#252525] dark:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A]'
       } ${className}`}
     >
-      {Icon && <Icon className="w-4 h-4 opacity-80" />}
-      {children}
+      {Icon && <Icon className="w-3.5 h-3.5 shrink-0 opacity-70" />}
+      <span>{children}</span>
     </button>
   );
 }

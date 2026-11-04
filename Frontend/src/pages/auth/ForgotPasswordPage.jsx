@@ -6,18 +6,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  KeyRound,
-  RefreshCw,
-  Send
+  RefreshCw
 } from 'lucide-react';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
+import api from '../../utils/axios';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
 
   // Form Field State
-  const [email, setEmail] = useState('alex.rivera@devspace.io');
+  const [email, setEmail] = useState('');
 
   // Interactive UI States
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +39,7 @@ export function ForgotPasswordPage() {
   };
 
   // Submit Handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
@@ -48,112 +47,98 @@ export function ForgotPasswordPage() {
 
     setIsLoading(true);
 
-    // Simulate API reset link request delay
-    setTimeout(() => {
-      setIsLoading(false);
-
-      if (email === 'notfound@devspace.io') {
-        setErrorMessage('No DevSpace account was found associated with this email address.');
-        return;
-      }
-
+    try {
+      await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
       setSubmitted(true);
-    }, 1200);
+    } catch (err) {
+      setErrorMessage(
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to request password reset. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Quick fill helper for testing
   const handleQuickFill = () => {
-    setEmail('alex.rivera@devspace.io');
+    setEmail('dev@example.com');
     setEmailError('');
     setErrorMessage('');
   };
 
-  const handleSimulateError = () => {
-    setEmail('notfound@devspace.io');
-    setEmailError('');
-    setErrorMessage('No DevSpace account was found associated with this email address.');
-  };
-
   return (
-    <div className="w-full max-w-md mx-auto py-6">
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl text-center space-y-6 glow-primary">
-        {/* Top Icon Badge */}
-        <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto shadow-lg shadow-indigo-950/40">
-          {submitted ? (
-            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-          ) : (
-            <KeyRound className="w-7 h-7 text-indigo-400" />
-          )}
-        </div>
-
-        {/* Dynamic State 1: SUCCESS STATE */}
+    <div className="w-full max-w-sm mx-auto">
+      <div className="rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] p-6 sm:p-7 shadow-xs space-y-5">
         {submitted ? (
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            <div>
-              <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight my-0">
-                Check Your Email
+          /* State 1: Confirmation */
+          <div className="space-y-4 text-center">
+            <div className="w-9 h-9 rounded-md bg-[#EBF8F1] dark:bg-[rgba(78,190,126,0.12)] border border-[#D1F0DE] dark:border-[rgba(78,190,126,0.25)] text-[#107C41] dark:text-[#4EBE7E] flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+
+            <div className="space-y-1">
+              <h1 className="text-lg font-semibold tracking-tight text-[#252525] dark:text-[#F2F2F2] my-0">
+                Instructions Sent
               </h1>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                We sent password reset instructions to <br />
-                <strong className="text-indigo-300 font-mono">{email}</strong>
+              <p className="text-xs text-[#777777] dark:text-[#A0A0A0] leading-relaxed">
+                If an account with <strong className="text-[#252525] dark:text-[#F2F2F2] font-mono">{email}</strong> exists,
+                we have dispatched password recovery instructions.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-left space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-indigo-400 font-bold">
-                <Send className="w-4 h-4" />
-                <span>What happens next?</span>
-              </div>
-              <ul className="space-y-1.5 text-slate-400 text-[11px] list-disc list-inside leading-relaxed">
-                <li>Click the reset link inside the email to set a new password.</li>
-                <li>The password reset link will expire in 60 minutes.</li>
-                <li>Didn't receive the email? Check your spam folder.</li>
+            <div className="p-3 rounded-md bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535] text-left text-xs text-[#777777] dark:text-[#A0A0A0] space-y-1">
+              <p className="font-medium text-[#252525] dark:text-[#F2F2F2]">Next steps:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                <li>Check your inbox and spam folder.</li>
+                <li>The security reset link expires in 60 minutes.</li>
               </ul>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="pt-2 space-y-2">
               <Button
                 variant="primary"
                 size="md"
                 onClick={() => navigate('/login')}
-                className="w-full justify-center text-sm py-2.5 shadow-lg shadow-indigo-600/20"
+                className="w-full justify-center h-9 text-xs font-medium"
               >
-                Back to Sign In
+                Back to Sign in
               </Button>
 
               <button
                 type="button"
                 onClick={() => setSubmitted(false)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Didn't get the link? Try another email</span>
+                <RefreshCw className="w-3 h-3" />
+                <span>Try a different email</span>
               </button>
             </div>
           </div>
         ) : (
-          /* Dynamic State 2: FORM STATE */
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight my-0">
-                Forgot Password?
+          /* State 2: Request Form */
+          <div className="space-y-5">
+            <div className="space-y-1">
+              <h1 className="text-lg font-semibold tracking-tight text-[#252525] dark:text-[#F2F2F2] my-0">
+                Reset your password
               </h1>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                No worries! Enter your account email address and we'll send you a password reset link.
+              <p className="text-xs text-[#777777] dark:text-[#A0A0A0]">
+                Enter your registered email address and we will send you password reset instructions.
               </p>
             </div>
 
-            {/* Global Error Banner */}
+            {/* Error Banner */}
             {errorMessage && (
-              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 text-left animate-in fade-in duration-200">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <div className="p-3 rounded-md bg-[#FDF3F2] dark:bg-[rgba(248,113,113,0.12)] border border-[#F9D5D3] dark:border-[rgba(248,113,113,0.25)] text-[#D83B01] dark:text-[#F87171] text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-left" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
               <Input
-                label="Registered Email Address"
+                label="Registered email address"
                 type="email"
                 required
                 disabled={isLoading}
@@ -165,7 +150,6 @@ export function ForgotPasswordPage() {
                 }}
                 error={emailError}
                 placeholder="developer@company.com"
-                helperText="Enter the email associated with your DevSpace account"
               />
 
               <Button
@@ -173,52 +157,39 @@ export function ForgotPasswordPage() {
                 size="md"
                 type="submit"
                 disabled={isLoading}
-                className="w-full justify-center text-sm py-2.5 shadow-lg shadow-indigo-600/20 mt-2"
+                className="w-full justify-center mt-2 h-9 text-xs font-medium"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span>Sending reset link...</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Send className="w-4 h-4" />
-                    <span>Send Reset Link</span>
-                  </div>
+                  'Send Reset Link'
                 )}
               </Button>
             </form>
 
-            {/* Testing Helper Triggers */}
-            <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
-              <span className="font-mono text-slate-500 uppercase text-[10px]">Testing Controls</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleQuickFill}
-                  className="text-indigo-400 hover:underline font-semibold cursor-pointer"
-                >
-                  Valid Email
-                </button>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={handleSimulateError}
-                  className="text-rose-400 hover:underline font-semibold cursor-pointer"
-                >
-                  Not Found Error
-                </button>
-              </div>
+            {/* Testing Shortcut */}
+            <div className="pt-2 border-t border-[#E8E8E5] dark:border-[#353535] flex items-center justify-between text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+              <span className="font-mono text-[10px]">Testing shortcut:</span>
+              <button
+                type="button"
+                onClick={handleQuickFill}
+                className="text-[#252525] dark:text-[#F2F2F2] hover:underline cursor-pointer font-medium"
+              >
+                Fill email
+              </button>
             </div>
 
             {/* Back to Login Link */}
-            <div className="pt-2 border-t border-slate-800/80">
+            <div className="pt-1 text-center">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] transition-colors"
               >
-                <ArrowLeft className="w-4 h-4 text-indigo-400" />
-                <span>Back to Sign In</span>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Sign in</span>
               </Link>
             </div>
           </div>

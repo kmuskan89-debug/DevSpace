@@ -1,19 +1,20 @@
 import React from 'react';
 
 const variants = {
-  primary: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 border border-indigo-500/30',
-  secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700',
-  outline: 'bg-transparent hover:bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-600',
-  danger: 'bg-rose-600/90 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 border border-rose-500/30',
-  ghost: 'bg-transparent hover:bg-slate-800/60 text-slate-400 hover:text-slate-100',
-  cyan: 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-600/20 border border-cyan-500/30'
+  primary: 'bg-[#252525] hover:bg-[#111111] text-[#FFFFFF] border border-[#252525] dark:bg-[#F2F2F2] dark:hover:bg-[#FFFFFF] dark:text-[#191919] dark:border-[#F2F2F2] shadow-xs',
+  secondary: 'bg-[#F7F7F5] hover:bg-[#F1F1EF] text-[#252525] border border-[#E8E8E5] dark:bg-[#242424] dark:hover:bg-[#2A2A2A] dark:text-[#F2F2F2] dark:border-[#353535]',
+  outline: 'bg-transparent hover:bg-[#F1F1EF] text-[#252525] border border-[#E8E8E5] dark:hover:bg-[#2A2A2A] dark:text-[#F2F2F2] dark:border-[#353535]',
+  ghost: 'bg-transparent hover:bg-[#F1F1EF] text-[#777777] hover:text-[#252525] dark:hover:bg-[#2A2A2A] dark:text-[#A0A0A0] dark:hover:text-[#F2F2F2]',
+  danger: 'bg-[#FDF3F2] hover:bg-[#F9E0DE] text-[#D83B01] border border-[#F9D5D3] dark:bg-[rgba(248,113,113,0.12)] dark:hover:bg-[rgba(248,113,113,0.2)] dark:text-[#F87171] dark:border-[rgba(248,113,113,0.25)]',
+  // Backward compatibility alias
+  cyan: 'bg-[#252525] hover:bg-[#111111] text-[#FFFFFF] border border-[#252525] dark:bg-[#F2F2F2] dark:hover:bg-[#FFFFFF] dark:text-[#191919] dark:border-[#F2F2F2] shadow-xs'
 };
 
 const sizes = {
-  sm: 'px-2.5 py-1.5 text-xs rounded-md gap-1.5',
-  md: 'px-3.5 py-2 text-sm rounded-lg gap-2',
-  lg: 'px-5 py-2.5 text-base rounded-xl gap-2.5',
-  icon: 'p-2 text-sm rounded-lg justify-center'
+  sm: 'h-7 px-2.5 text-xs rounded-md gap-1.5 font-medium',
+  md: 'h-8.5 px-3 py-1.5 text-xs rounded-md gap-2 font-medium',
+  lg: 'h-10 px-4 py-2 text-sm rounded-md gap-2.5 font-medium',
+  icon: 'h-8 w-8 p-1.5 rounded-md justify-center'
 };
 
 export function Button({
@@ -24,6 +25,7 @@ export function Button({
   rightIcon: RightIcon,
   className = '',
   disabled = false,
+  loading = false,
   onClick,
   type = 'button',
   ...props
@@ -34,14 +36,32 @@ export function Button({
   return (
     <button
       type={type}
-      disabled={disabled}
+      disabled={disabled || loading}
       onClick={onClick}
-      className={`inline-flex items-center justify-center font-medium transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${variantClass} ${sizeClass} ${className}`}
+      className={`inline-flex items-center justify-center transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 ${variantClass} ${sizeClass} ${className}`}
       {...props}
     >
-      {Icon && <Icon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4'}`} />}
+      {loading ? (
+        <svg
+          className="animate-spin h-3.5 w-3.5 text-current shrink-0"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      ) : (
+        Icon && <Icon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'} shrink-0`} />
+      )}
       {children && <span>{children}</span>}
-      {RightIcon && <RightIcon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4'}`} />}
+      {!loading && RightIcon && (
+        <RightIcon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'} shrink-0`} />
+      )}
     </button>
   );
 }

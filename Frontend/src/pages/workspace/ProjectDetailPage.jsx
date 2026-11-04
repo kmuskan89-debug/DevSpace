@@ -1,240 +1,252 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  FolderGit2,
   Kanban,
-  GitBranch,
-  GitCommit,
-  GitPullRequest,
-  CheckCircle2,
-  Clock,
-  Play,
   Users,
-  Calendar,
   AlertCircle,
   TrendingUp,
-  CheckSquare
+  CheckSquare,
+  Clock,
+  ArrowLeft,
+  CheckCircle2
 } from 'lucide-react';
 import useProject from '../../hooks/useProject';
+import useWorkspace from '../../hooks/useWorkspace';
 import ProjectHeader from '../../components/projects/ProjectHeader';
 import ProjectNavTabs from '../../components/projects/ProjectNavTabs';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Avatar from '../../components/common/Avatar';
+import EmptyState from '../../components/common/EmptyState';
+import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import TaskModal from '../../components/projects/TaskModal';
 import RecentActivityList from '../../components/dashboard/RecentActivityList';
-import { INITIAL_ACTIVITIES, INITIAL_MEMBERS } from '../../utils/constants';
+import { useToast } from '../../components/common/Toast';
 
 export function ProjectDetailPage() {
   const navigate = useNavigate();
-  const { workspaceId, projectId } = useParams();
-  const { project, tasks } = useProject();
+  const { workspaceId, projectId: _paramProjectId } = useParams();
+  const { addToast } = useToast();
+  const { project, tasks, stats, isLoading, error, createTask } = useProject();
+  const { members, activities } = useWorkspace(workspaceId || project?.workspaceId);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
-  const handleCreateTask = (newTask) => {
-    alert(`Created task "${newTask.title}" for ${project.name}`);
+  const handleCreateTask = async (newTask) => {
+    try {
+      const created = await createTask(newTask);
+      addToast(`Created task "${created.title}" [${created.issueKey || created.id}]`, 'success');
+      setIsTaskModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create task:', err);
+      addToast(err.response?.data?.message || err.message || 'Failed to create task', 'error');
+    }
   };
 
-  // Static demo upcoming deadlines
-  const upcomingDeadlines = [
-    {
-      id: 'd-1',
-      title: 'PKCE Mobile OAuth Authorization Release',
-      dueDate: 'Oct 5, 2026',
-      priority: 'Urgent',
-      status: 'In Progress',
-      assignee: 'Alex Rivera'
-    },
-    {
-      id: 'd-2',
-      title: 'Redis Token Bucket Rate Limiting Middleware',
-      dueDate: 'Oct 8, 2026',
-      priority: 'High',
-      status: 'To Do',
-      assignee: 'Sarah Chen'
-    },
-    {
-      id: 'd-3',
-      title: 'JWT Token Revocation & Rotation Test Suite',
-      dueDate: 'Oct 12, 2026',
-      priority: 'Medium',
-      status: 'Code Review',
-      assignee: 'David Kim'
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <SkeletonLoader variant="card" count={3} />
+      </div>
+    );
+  }
 
-  const projectMembers = INITIAL_MEMBERS.slice(0, 4);
+  if (error || !project) {
+    return (
+      <div className="p-8 rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] text-center max-w-md mx-auto space-y-3 mt-8">
+        <AlertCircle className="w-8 h-8 text-[#D83B01] dark:text-[#F87171] mx-auto" />
+        <div>
+          <h3 className="text-base font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">Project Not Found</h3>
+          <p className="text-xs text-[#777777] dark:text-[#A0A0A0] mt-1">
+            {error || 'The requested project could not be found or you lack permission to view it.'}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          icon={ArrowLeft}
+          onClick={() => navigate(`/workspace/${workspaceId || 'current'}/projects`)}
+        >
+          Back to Projects
+        </Button>
+      </div>
+    );
+  }
+
+  const projectMembers = members && members.length > 0 ? members.slice(0, 6) : [];
 
   return (
-    <div className="space-y-6">
-      {/* 1. PROJECT HEADER BANNER */}
+    <div className="space-y-5">
+      {/* 1. PROJECT HEADER */}
       <ProjectHeader project={project} onAddTask={() => setIsTaskModalOpen(true)} />
 
-      {/* 2. PROJECT NAVIGATION TABS (REACT ROUTER DOM) */}
+      {/* 2. PROJECT NAVIGATION TABS */}
       <ProjectNavTabs taskCount={tasks.length} />
 
-      {/* 3. METRICS & PROGRESS OVERVIEW ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 3. METRICS OVERVIEW CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Progress Card */}
-        <Card hoverable={false} className="space-y-3 border border-slate-800">
-          <div className="flex justify-between items-center text-xs font-mono">
-            <span className="text-slate-400 uppercase font-semibold">Sprint Progress</span>
-            <span className="text-indigo-400 font-bold">{project.progress}%</span>
-          </div>
-          <div className="w-full h-3 rounded-full bg-slate-900 border border-slate-800 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-full transition-all duration-500"
-              style={{ width: `${project.progress}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[11px] text-slate-400 font-mono pt-1">
-            <span>Completed: 18 Tasks</span>
-            <span className="text-emerald-400">Target: Oct 15</span>
+        <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">Completion Rate</p>
+              <h4 className="text-2xl font-bold text-[#252525] dark:text-[#F2F2F2] mt-1 tracking-tight">{project.progress}%</h4>
+              <p className="text-[11px] text-[#999999] dark:text-[#777777] mt-1 font-mono">
+                {stats.completedTasks} of {stats.totalTasks} issues done
+              </p>
+            </div>
+            <div className="w-7 h-7 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4" />
+            </div>
           </div>
         </Card>
 
-        {/* Task Statistics */}
-        <Card hoverable={false} className="flex items-center gap-3 border border-slate-800">
-          <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 shrink-0 border border-cyan-500/20">
-            <CheckSquare className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase text-slate-400 my-0">Task Statistics</p>
-            <h4 className="text-xl font-bold text-slate-100 mt-0.5">{tasks.length} Active Issues</h4>
-            <p className="text-[11px] text-slate-400 font-mono mt-0.5">4 In Progress • 2 Code Review</p>
+        {/* Total Tasks Card */}
+        <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">Total Issues</p>
+              <h4 className="text-2xl font-bold text-[#252525] dark:text-[#F2F2F2] mt-1 tracking-tight">{stats.totalTasks}</h4>
+              <p className="text-[11px] text-[#999999] dark:text-[#777777] mt-1">Across sprint and backlog</p>
+            </div>
+            <div className="w-7 h-7 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] flex items-center justify-center shrink-0">
+              <CheckSquare className="w-4 h-4" />
+            </div>
           </div>
         </Card>
 
-        {/* Sprint Velocity */}
-        <Card hoverable={false} className="flex items-center gap-3 border border-slate-800">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/20">
-            <TrendingUp className="w-5 h-5" />
+        {/* Open Tasks Card */}
+        <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">Open / In Progress</p>
+              <h4 className="text-2xl font-bold text-[#252525] dark:text-[#F2F2F2] mt-1 tracking-tight">{stats.openTasks}</h4>
+              <p className="text-[11px] text-[#999999] dark:text-[#777777] mt-1">Requiring resolution</p>
+            </div>
+            <div className="w-7 h-7 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] flex items-center justify-center shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase text-slate-400 my-0">Build & PR Health</p>
-            <h4 className="text-xl font-bold text-emerald-400 mt-0.5">46 Tests Passing</h4>
-            <p className="text-[11px] text-slate-400 font-mono mt-0.5">100% CI Coverage • 1.2s Build</p>
+        </Card>
+
+        {/* Status Card */}
+        <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">Project State</p>
+              <h4 className="text-2xl font-bold text-[#252525] dark:text-[#F2F2F2] mt-1 tracking-tight">{project.status}</h4>
+              <p className="text-[11px] text-[#999999] dark:text-[#777777] mt-1 font-mono">Key: {project.key}</p>
+            </div>
+            <div className="w-7 h-7 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* 4. MAIN GRID LAYOUT */}
+      {/* 4. MAIN CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 7 Columns: Upcoming Deadlines & Active Sprint Tasks */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Upcoming Deadlines Section */}
-          <Card hoverable={false} className="space-y-4 border border-slate-800">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-slate-100 my-0">Upcoming Deadlines & Milestones</h3>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-[10px] font-mono border border-indigo-500/20">
-                Sprint 14
-              </span>
-            </div>
+        {/* Left 7 Columns: Active Issues List */}
+        <div className="lg:col-span-7 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-[#353535]">
+            <h2 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+              Active Issues ({tasks.length})
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Kanban}
+              onClick={() => navigate(`/workspace/${workspaceId}/projects/${project.id || project._id}/board`)}
+              className="text-xs h-7"
+            >
+              Open Board
+            </Button>
+          </div>
 
-            <div className="space-y-3">
-              {upcomingDeadlines.map((item) => (
+          {tasks.length > 0 ? (
+            <div className="rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] divide-y divide-[#E8E8E5] dark:divide-[#353535] overflow-hidden">
+              {tasks.slice(0, 8).map((t) => (
                 <div
-                  key={item.id}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800 transition-colors"
+                  key={t.id || t._id}
+                  onClick={() => navigate(`/workspace/${workspaceId}/projects/${project.id || project._id}/board`)}
+                  className="flex items-center justify-between p-3 hover:bg-[#F9F9F8] dark:hover:bg-[#262626] transition-colors cursor-pointer gap-3 group"
                 >
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-slate-200">{item.title}</h4>
-                    <div className="flex items-center gap-3 text-[11px] text-slate-400 font-mono">
-                      <span>Assigned to: <strong className="text-slate-300">{item.assignee}</strong></span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Badge priority={item.priority} size="sm" />
-                    <div className="flex items-center gap-1 text-xs font-mono text-amber-400 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
-                      <Clock className="w-3 h-3" />
-                      <span>{item.dueDate}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Active Sprint Backlog */}
-          <Card hoverable={false} className="space-y-4 border border-slate-800">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-slate-100 my-0">Active Tasks</h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">Sprint tasks linked to this repository</p>
-              </div>
-              <Button
-                variant="cyan"
-                size="sm"
-                icon={Kanban}
-                onClick={() => navigate(`/workspace/${workspaceId}/projects/${project.id}/board`)}
-              >
-                Sprint Board
-              </Button>
-            </div>
-
-            <div className="space-y-3">
-              {tasks.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => navigate(`/workspace/${workspaceId}/projects/${project.id}/board`)}
-                  className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs font-mono text-slate-500 uppercase shrink-0">{t.id}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535] shrink-0">
+                      {t.issueKey || t.id}
+                    </span>
                     <div className="truncate">
-                      <h4 className="text-xs font-bold text-slate-200 truncate my-0">{t.title}</h4>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">{t.branch}</p>
+                      <span className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] truncate group-hover:underline">
+                        {t.title}
+                      </span>
+                      {t.branch && (
+                        <p className="text-[10px] font-mono text-[#999999] dark:text-[#777777] truncate mt-0.5">
+                          {t.branch}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge status={t.status} size="sm" />
                     <Badge priority={t.priority} size="sm" />
-                    <Avatar src={t.assignee?.avatar} name={t.assignee?.name} size="sm" />
+                    {t.assignee && (
+                      <Avatar src={t.assignee?.avatar} name={t.assignee?.name} size="xs" />
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-          </Card>
+          ) : (
+            <EmptyState
+              icon={CheckSquare}
+              title="No issues found"
+              description="Create a task or issue to begin tracking work for this project."
+              actionLabel="Create Task"
+              onAction={() => setIsTaskModalOpen(true)}
+              className="py-8"
+            />
+          )}
         </div>
 
-        {/* Right 5 Columns: Project Members & Recent Activity */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Members List Card */}
-          <Card hoverable={false} className="space-y-4 border border-slate-800">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+        {/* Right 5 Columns: Project Members & Activity */}
+        <div className="lg:col-span-5 space-y-5">
+          {/* Members Card */}
+          <Card hoverable={false} className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E8E8E5] dark:border-[#353535]">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-slate-100 my-0">Project Members ({projectMembers.length})</h3>
+                <Users className="w-4 h-4 text-[#777777] dark:text-[#A0A0A0]" />
+                <h3 className="text-xs font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+                  Workspace Team ({members.length})
+                </h3>
               </div>
-              <span className="text-[11px] text-indigo-400 font-mono">Role Access</span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {projectMembers.map((m) => (
-                <div key={m.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <div className="flex items-center gap-2.5">
-                    <Avatar src={m.avatar} name={m.name} size="sm" />
-                    <div>
-                      <p className="text-xs font-bold text-slate-200 my-0">{m.name}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{m.role}</p>
+                <div
+                  key={m.id || m._id}
+                  className="flex items-center justify-between p-2 rounded-md bg-[#FAFAF9] dark:bg-[#1E1E1E] border border-[#E8E8E5] dark:border-[#353535]"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Avatar src={m.avatar} name={m.name} size="xs" />
+                    <div className="truncate">
+                      <p className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] my-0 truncate">{m.name}</p>
+                      <p className="text-[10px] text-[#777777] dark:text-[#A0A0A0] font-mono truncate">{m.role}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                    {m.commits} commits
-                  </span>
+                  {m.name === project.lead && (
+                    <span className="text-[10px] font-mono text-[#252525] dark:text-[#F2F2F2] bg-[#F1F1EF] dark:bg-[#2A2A2A] px-1.5 py-0.2 rounded border border-[#E8E8E5] dark:border-[#353535] shrink-0 font-semibold">
+                      Lead
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
           </Card>
 
-          {/* Recent Activity Log */}
-          <RecentActivityList activities={INITIAL_ACTIVITIES.slice(0, 3)} />
+          {/* Activity Stream */}
+          <RecentActivityList activities={activities.slice(0, 5)} />
         </div>
       </div>
 
@@ -243,6 +255,7 @@ export function ProjectDetailPage() {
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleCreateTask}
+        members={members}
       />
     </div>
   );

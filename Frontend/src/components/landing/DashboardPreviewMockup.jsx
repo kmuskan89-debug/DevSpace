@@ -1,48 +1,43 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Kanban,
-  GitBranch,
-  GitCommit,
-  GitPullRequest,
-  CheckCircle2,
-  Terminal,
-  Bot,
-  Play,
-  Layers,
-  ArrowRight
+  BarChart3,
+  ListTodo
 } from 'lucide-react';
 import Badge from '../common/Badge';
 import Avatar from '../common/Avatar';
 
 export function DashboardPreviewMockup() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('board');
 
   return (
-    <div className="w-full max-w-5xl mx-auto glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-700/60 shadow-2xl glow-primary space-y-4 text-left">
-      {/* Window Controls Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <div className="w-full max-w-5xl mx-auto rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] shadow-sm text-left overflow-hidden">
+      {/* Top Application Browser Chrome */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-2.5 border-b border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#1C1C1C]">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-            <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-            <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#D1D1CD] dark:bg-[#444444]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#D1D1CD] dark:bg-[#444444]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#D1D1CD] dark:bg-[#444444]" />
           </div>
-          <span className="text-xs font-mono text-slate-500 hidden sm:inline">
-            devspace://ws-core-platform/workspace/overview
-          </span>
+          <div className="flex items-center gap-1.5 text-xs text-[#777777] dark:text-[#A0A0A0] font-mono">
+            <span className="text-[#252525] dark:text-[#F2F2F2] font-semibold">DevSpace</span>
+            <span>/</span>
+            <span>Core Platform</span>
+            <span>/</span>
+            <span className="text-[#252525] dark:text-[#F2F2F2]">Sprint 1</span>
+          </div>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        {/* View Switcher Tabs */}
+        <div className="flex items-center gap-1 bg-[#FFFFFF] dark:bg-[#242424] p-0.5 rounded-md border border-[#E8E8E5] dark:border-[#353535]">
           <button
             type="button"
             onClick={() => setActiveTab('board')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
               activeTab === 'board'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-[#252525] text-[#FFFFFF] dark:bg-[#F2F2F2] dark:text-[#191919]'
+                : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
             }`}
           >
             <Kanban className="w-3.5 h-3.5" />
@@ -50,154 +45,244 @@ export function DashboardPreviewMockup() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('commits')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'commits'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveTab('backlog')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === 'backlog'
+                ? 'bg-[#252525] text-[#FFFFFF] dark:bg-[#F2F2F2] dark:text-[#191919]'
+                : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
             }`}
           >
-            <GitCommit className="w-3.5 h-3.5" />
-            <span>Live Commits</span>
+            <ListTodo className="w-3.5 h-3.5" />
+            <span>Backlog</span>
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('ai')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'ai'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveTab('reports')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+              activeTab === 'reports'
+                ? 'bg-[#252525] text-[#FFFFFF] dark:bg-[#F2F2F2] dark:text-[#191919]'
+                : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
             }`}
           >
-            <Bot className="w-3.5 h-3.5 text-cyan-400" />
-            <span>AI Code Copilot</span>
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span>Burndown</span>
           </button>
         </div>
       </div>
 
-      {/* Dynamic Content View Area */}
-      {activeTab === 'board' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 animate-in fade-in duration-300">
-          {/* Column 1 */}
-          <div className="glass-card p-3.5 rounded-xl border border-slate-800 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-slate-400">TO DO (2)</span>
-              <span className="w-2 h-2 rounded-full bg-slate-500" />
+      {/* Main Preview Content */}
+      <div className="p-4 sm:p-5 bg-[#FFFFFF] dark:bg-[#202020] space-y-4">
+        {/* Sprint Header & Filter Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E8E5] dark:border-[#353535]">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+                Sprint 1 — Core Service Architecture
+              </h3>
+              <Badge status="Active" size="sm" />
             </div>
-            <div className="p-3 rounded-lg bg-slate-900 border border-slate-700/70 space-y-2 hover:border-indigo-500/40 transition-colors">
-              <div className="flex justify-between items-center text-[10px] font-mono text-slate-500">
-                <span>TASK-102</span>
-                <Badge priority="High" size="sm" />
-              </div>
-              <p className="text-xs font-bold text-slate-200">Rate Limiting Redis Token Bucket</p>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                <span>Branch: feature/redis-limiter</span>
-                <Avatar name="Sarah Chen" size="sm" />
-              </div>
-            </div>
+            <p className="text-xs text-[#777777] dark:text-[#A0A0A0] mt-0.5">
+              Target: Nov 1 – Nov 15 • 18 Story Points committed • 12 Points Completed
+            </p>
           </div>
 
-          {/* Column 2 */}
-          <div className="glass-card p-3.5 rounded-xl border border-indigo-500/30 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-indigo-400">IN PROGRESS (1)</span>
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-            </div>
-            <div className="p-3 rounded-lg bg-slate-900 border border-indigo-500/50 space-y-2 shadow-lg shadow-indigo-950/40">
-              <div className="flex justify-between items-center text-[10px] font-mono text-slate-500">
-                <span>TASK-101</span>
-                <Badge priority="Urgent" size="sm" />
-              </div>
-              <p className="text-xs font-bold text-slate-200">OAuth2 PKCE Mobile Authorization</p>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                <span className="text-indigo-300 font-mono">PR #42 Open</span>
-                <Avatar name="Alex Rivera" size="sm" />
-              </div>
-            </div>
-          </div>
-
-          {/* Column 3 */}
-          <div className="glass-card p-3.5 rounded-xl border border-emerald-500/30 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold text-emerald-400">DONE (18)</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            </div>
-            <div className="p-3 rounded-lg bg-slate-900 border border-emerald-500/30 space-y-2">
-              <div className="flex justify-between items-center text-[10px] font-mono text-slate-500">
-                <span>TASK-104</span>
-                <Badge priority="Low" size="sm" />
-              </div>
-              <p className="text-xs font-bold text-slate-200">JWT Gateway Verification Suite</p>
-              <div className="flex items-center justify-between text-[10px] text-emerald-400 pt-1 border-t border-slate-800 font-mono">
-                <span>Build #148 Passed (46 tests)</span>
-                <Avatar name="David Kim" size="sm" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'commits' && (
-        <div className="space-y-2.5 pt-1 font-mono text-xs animate-in fade-in duration-300">
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <GitCommit className="w-4 h-4 text-indigo-400" />
-              <div>
-                <span className="text-slate-100 font-bold">c8f419b: fix(auth): refresh token rotation race condition</span>
-                <span className="block text-[11px] text-slate-400">pushed by @alexrivera • 14 mins ago</span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px]">
-              Verified
+          <div className="flex items-center gap-2 text-xs">
+            <span className="px-2 py-1 rounded bg-[#F7F7F5] dark:bg-[#242424] border border-[#E8E8E5] dark:border-[#353535] text-[#777777] dark:text-[#A0A0A0]">
+              Filter: All Issues
             </span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <GitPullRequest className="w-4 h-4 text-cyan-400" />
-              <div>
-                <span className="text-slate-100 font-bold">PR #42: feat(ui): add responsive sidebar & dark theme tokens</span>
-                <span className="block text-[11px] text-slate-400">opened by @elena • 42 mins ago</span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px]">
-              Approved (2)
+            <span className="px-2 py-1 rounded bg-[#F7F7F5] dark:bg-[#242424] border border-[#E8E8E5] dark:border-[#353535] text-[#777777] dark:text-[#A0A0A0]">
+              Sort: Priority
             </span>
           </div>
         </div>
-      )}
 
-      {activeTab === 'ai' && (
-        <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs space-y-3 animate-in fade-in duration-300">
-          <div className="flex items-center gap-2 text-cyan-400 font-bold border-b border-slate-800 pb-2">
-            <Bot className="w-4 h-4" />
-            <span>DevSpace AI Copilot Agent</span>
+        {/* Tab 1: Sprint Board */}
+        {activeTab === 'board' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {/* Column: To Do */}
+            <div className="rounded-md border border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#1C1C1C] p-3 space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#777777] dark:text-[#A0A0A0]">
+                <span>TO DO (1)</span>
+                <span className="text-[10px] font-mono">3 pts</span>
+              </div>
+
+              <div className="rounded border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-3 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-semibold text-[#252525] dark:text-[#F2F2F2]">CORE-104</span>
+                  <Badge priority="Medium" size="sm" />
+                </div>
+                <p className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] my-0 leading-tight">
+                  Implement session token revocation on logout
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-[#353535] text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                  <span className="font-mono">3 pts</span>
+                  <Avatar name="Alice Smith" size="xs" />
+                </div>
+              </div>
+            </div>
+
+            {/* Column: In Progress */}
+            <div className="rounded-md border border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#1C1C1C] p-3 space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#777777] dark:text-[#A0A0A0]">
+                <span>IN PROGRESS (2)</span>
+                <span className="text-[10px] font-mono">8 pts</span>
+              </div>
+
+              <div className="rounded border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-3 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-semibold text-[#252525] dark:text-[#F2F2F2]">CORE-102</span>
+                  <Badge priority="Urgent" size="sm" />
+                </div>
+                <p className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] my-0 leading-tight">
+                  Recursive NoSQL sanitizer for MongoDB queries
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-[#353535] text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                  <span className="font-mono">5 pts</span>
+                  <Avatar name="Alex Rivera" size="xs" />
+                </div>
+              </div>
+
+              <div className="rounded border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-3 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-semibold text-[#252525] dark:text-[#F2F2F2]">CORE-105</span>
+                  <Badge priority="High" size="sm" />
+                </div>
+                <p className="text-xs font-medium text-[#252525] dark:text-[#F2F2F2] my-0 leading-tight">
+                  Workspace invitation token generation & validation
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-[#353535] text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                  <span className="font-mono">3 pts</span>
+                  <Avatar name="David Kim" size="xs" />
+                </div>
+              </div>
+            </div>
+
+            {/* Column: Done */}
+            <div className="rounded-md border border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#1C1C1C] p-3 space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#777777] dark:text-[#A0A0A0]">
+                <span>DONE (2)</span>
+                <span className="text-[10px] font-mono">7 pts</span>
+              </div>
+
+              <div className="rounded border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-3 space-y-2 opacity-85 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-semibold text-[#777777] dark:text-[#A0A0A0] line-through">CORE-101</span>
+                  <Badge status="Done" size="sm" />
+                </div>
+                <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0] my-0 leading-tight">
+                  Sequential project issue key generation
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-[#353535] text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                  <span className="font-mono">5 pts</span>
+                  <Avatar name="Sarah Chen" size="xs" />
+                </div>
+              </div>
+
+              <div className="rounded border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#242424] p-3 space-y-2 opacity-85 shadow-2xs">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-semibold text-[#777777] dark:text-[#A0A0A0] line-through">CORE-103</span>
+                  <Badge status="Done" size="sm" />
+                </div>
+                <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0] my-0 leading-tight">
+                  Single active sprint enforcement constraint
+                </p>
+                <div className="flex items-center justify-between pt-2 border-t border-[#E8E8E5] dark:border-[#353535] text-[11px] text-[#777777] dark:text-[#A0A0A0]">
+                  <span className="font-mono">2 pts</span>
+                  <Avatar name="Alice Smith" size="xs" />
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-slate-300 leading-relaxed">
-            <span className="text-slate-500">// Automated Code Review Summary</span><br />
-            Found 0 security vulnerabilities in PR #42. Redis token bucket rate limiter benchmark handles 14,500 req/sec with 1.2ms p99 latency.
-          </p>
-          <div className="p-2.5 rounded bg-slate-900 border border-cyan-500/30 text-indigo-300">
-            ✓ Recommendation: Ready to merge into <code>main</code>
+        )}
+
+        {/* Tab 2: Backlog Management */}
+        {activeTab === 'backlog' && (
+          <div className="space-y-3">
+            <div className="rounded-md border border-[#E8E8E5] dark:border-[#353535] divide-y divide-[#E8E8E5] dark:divide-[#353535]">
+              <div className="p-2.5 flex items-center justify-between bg-[#F7F7F5] dark:bg-[#1C1C1C] text-xs font-semibold text-[#777777] dark:text-[#A0A0A0]">
+                <span>Backlog Issues (Unassigned to Sprints)</span>
+                <span>3 Issues • 11 Story Points</span>
+              </div>
+              <div className="p-3 flex items-center justify-between text-xs hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[11px] font-semibold text-[#777777] dark:text-[#A0A0A0]">CORE-108</span>
+                  <span className="text-[#252525] dark:text-[#F2F2F2]">CSV export for workspace task analytics</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge priority="Low" size="sm" />
+                  <span className="font-mono text-[11px] text-[#777777] dark:text-[#A0A0A0]">2 pts</span>
+                </div>
+              </div>
+              <div className="p-3 flex items-center justify-between text-xs hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[11px] font-semibold text-[#777777] dark:text-[#A0A0A0]">CORE-109</span>
+                  <span className="text-[#252525] dark:text-[#F2F2F2]">Saved view filter preset duplication & sharing</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge priority="Medium" size="sm" />
+                  <span className="font-mono text-[11px] text-[#777777] dark:text-[#A0A0A0]">5 pts</span>
+                </div>
+              </div>
+              <div className="p-3 flex items-center justify-between text-xs hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[11px] font-semibold text-[#777777] dark:text-[#A0A0A0]">CORE-110</span>
+                  <span className="text-[#252525] dark:text-[#F2F2F2]">Last-owner guard for workspace role demotions</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge priority="High" size="sm" />
+                  <span className="font-mono text-[11px] text-[#777777] dark:text-[#A0A0A0]">4 pts</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Interactive Footer Banner */}
-      <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
-        <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Real-time WebSocket connection active • 14 engineers online</span>
-        </div>
+        {/* Tab 3: Burndown Report */}
+        {activeTab === 'reports' && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              <div className="p-3 rounded-md bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535]">
+                <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0]">Committed</p>
+                <p className="text-base font-semibold text-[#252525] dark:text-[#F2F2F2] mt-0.5">18 pts</p>
+              </div>
+              <div className="p-3 rounded-md bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535]">
+                <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0]">Completed</p>
+                <p className="text-base font-semibold text-[#107C41] dark:text-[#4EBE7E] mt-0.5">12 pts</p>
+              </div>
+              <div className="p-3 rounded-md bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535]">
+                <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0]">Remaining</p>
+                <p className="text-base font-semibold text-[#252525] dark:text-[#F2F2F2] mt-0.5">6 pts</p>
+              </div>
+              <div className="p-3 rounded-md bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535]">
+                <p className="text-[11px] text-[#777777] dark:text-[#A0A0A0]">Completion</p>
+                <p className="text-base font-semibold text-[#252525] dark:text-[#F2F2F2] mt-0.5">67%</p>
+              </div>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-1 font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
-        >
-          <span>Launch Full Dashboard</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+            {/* Minimal SVG Burndown chart representation */}
+            <div className="p-4 rounded-md border border-[#E8E8E5] dark:border-[#353535] bg-[#F7F7F5] dark:bg-[#1C1C1C] space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono text-[#777777] dark:text-[#A0A0A0]">
+                <span>Sprint Velocity Trendline</span>
+                <span>Day 8 of 14</span>
+              </div>
+              <div className="h-24 w-full flex items-end gap-1.5 pt-2">
+                {[18, 18, 16, 16, 14, 14, 12, 12, 10, 8, 6, 4, 2, 0].map((val, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                    <div
+                      style={{ height: `${(val / 18) * 75}px` }}
+                      className={`w-full rounded-xs transition-all ${
+                        idx <= 7
+                          ? 'bg-[#252525] dark:bg-[#F2F2F2]'
+                          : 'bg-[#D1D1CD]/60 dark:bg-[#444444]/60'
+                      }`}
+                    />
+                    <span className="text-[9px] font-mono text-[#999999]">d{idx + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

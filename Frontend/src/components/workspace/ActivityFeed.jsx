@@ -1,72 +1,145 @@
 import React, { useState } from 'react';
-import { Filter, Search, GitCommit, GitPullRequest, CheckCircle2, Rocket } from 'lucide-react';
+import {
+  Activity,
+  Search,
+  Filter,
+  XCircle,
+  FolderGit2,
+  CheckSquare,
+  MessageSquare,
+  UserPlus,
+  Kanban
+} from 'lucide-react';
 import Card from '../common/Card';
-import Avatar from '../common/Avatar';
+import EmptyState from '../common/EmptyState';
+import ActivityItem from '../dashboard/ActivityItem';
+
+const CATEGORIES = [
+  { id: 'all', label: 'All Events' },
+  { id: 'task', label: 'Tasks', icon: CheckSquare },
+  { id: 'sprint', label: 'Sprints', icon: Kanban },
+  { id: 'project', label: 'Projects', icon: FolderGit2 },
+  { id: 'member', label: 'Members', icon: UserPlus },
+  { id: 'comment', label: 'Comments', icon: MessageSquare }
+];
 
 export function ActivityFeed({ activities = [] }) {
-  const [filter, setFilter] = useState('all');
+  const [category, setCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredActivities = activities.filter((act) => {
-    if (filter === 'all') return true;
-    return act.type === filter;
+    // Category match
+    const actionStr = (act.action || act.type || '').toUpperCase();
+    let matchesCategory = true;
+    if (category === 'task') {
+      matchesCategory = actionStr.includes('TASK');
+    } else if (category === 'sprint') {
+      matchesCategory = actionStr.includes('SPRINT');
+    } else if (category === 'project') {
+      matchesCategory = actionStr.includes('PROJECT');
+    } else if (category === 'member') {
+      matchesCategory = actionStr.includes('MEMBER');
+    } else if (category === 'comment') {
+      matchesCategory = actionStr.includes('COMMENT');
+    }
+
+    if (!matchesCategory) return false;
+
+    // Search match
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const userName = (act.user || act.actor?.name || '').toLowerCase();
+      const actionName = (act.action || '').toLowerCase();
+      const targetName = (
+        act.target ||
+        act.details?.title ||
+        act.details?.name ||
+        act.details?.issueKey ||
+        ''
+      ).toLowerCase();
+      return (
+        userName.includes(q) || actionName.includes(q) || targetName.includes(q)
+      );
+    }
+
+    return true;
   });
 
   return (
-    <Card hoverable={false} className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+    <Card hoverable={false} className="p-4 sm:p-5 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] space-y-4">
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E8E5] dark:border-[#353535]">
         <div>
-          <h3 className="text-base font-bold text-slate-100">Audit & Event Logs</h3>
-          <p className="text-xs text-slate-400">Detailed record of repository actions and sprint updates</p>
+          <h2 className="text-sm font-semibold text-[#252525] dark:text-[#F2F2F2] my-0">
+            Workspace Activity Feed
+          </h2>
+          <p className="text-xs text-[#777777] dark:text-[#A0A0A0] mt-0.5">
+            Audit history of task transitions, sprint cycles, and collaboration events
+          </p>
         </div>
 
-        {/* Filter buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto">
-          {['all', 'commit', 'pull_request', 'review', 'deploy'].map((t) => (
+        {/* Search */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#999999] dark:text-[#666666]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search activity..."
+            className="w-full bg-[#F7F7F5] dark:bg-[#1C1C1C] border border-[#E8E8E5] dark:border-[#353535] rounded-md pl-8 pr-7 py-1 text-xs text-[#252525] dark:text-[#F2F2F2] placeholder-[#999999] dark:placeholder-[#666666] focus:outline-none focus:border-[#252525] dark:focus:border-[#F2F2F2]"
+          />
+          {searchQuery && (
             <button
-              key={t}
               type="button"
-              onClick={() => setFilter(t)}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors capitalize cursor-pointer whitespace-nowrap ${
-                filter === t
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-              }`}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#999999] hover:text-[#252525] dark:hover:text-[#F2F2F2] cursor-pointer"
             >
-              {t.replace('_', ' ')}
+              <XCircle className="w-3.5 h-3.5" />
             </button>
-          ))}
+          )}
         </div>
       </div>
 
-      <div className="space-y-4 relative before:absolute before:inset-0 before:left-5 before:w-0.5 before:bg-slate-800">
-        {filteredActivities.map((act) => (
-          <div key={act.id} className="relative flex items-start gap-4 pl-2">
-            <div className="z-10 bg-slate-950 p-0.5 rounded-full ring-4 ring-slate-950">
-              <Avatar src={act.avatar} name={act.user} size="sm" />
-            </div>
-
-            <div className="flex-1 glass-card rounded-xl p-3.5 border border-slate-800 space-y-1.5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-100">{act.user}</span>
-                  <span className="text-xs text-slate-400">{act.action}</span>
-                </div>
-                <span className="text-[11px] font-mono text-slate-500">{act.time}</span>
-              </div>
-
-              <div className="p-2 rounded bg-slate-950/70 border border-slate-800/80 text-xs font-mono text-indigo-300">
-                {act.target}
-              </div>
-
-              <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
-                <span>Project: {act.project}</span>
-                <span>•</span>
-                <span>Type: {act.type}</span>
-              </div>
-            </div>
-          </div>
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <span className="text-[10px] font-mono uppercase text-[#777777] dark:text-[#A0A0A0] flex items-center gap-1 shrink-0 mr-1">
+          <Filter className="w-3 h-3" /> Event:
+        </span>
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setCategory(cat.id)}
+            className={`px-2.5 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+              category === cat.id
+                ? 'bg-[#252525] dark:bg-[#F2F2F2] text-[#FFFFFF] dark:text-[#191919] font-semibold'
+                : 'bg-[#F7F7F5] dark:bg-[#252525] text-[#777777] dark:text-[#A0A0A0] border border-[#E8E8E5] dark:border-[#353535] hover:text-[#252525] dark:hover:text-[#F2F2F2]'
+            }`}
+          >
+            {cat.label}
+          </button>
         ))}
       </div>
+
+      {/* Activity Timeline List */}
+      {filteredActivities.length > 0 ? (
+        <div className="space-y-2 pt-1">
+          {filteredActivities.map((act) => (
+            <ActivityItem key={act.id || act._id} activity={act} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          icon={Activity}
+          title="No activity records found"
+          description={
+            searchQuery || category !== 'all'
+              ? 'No activity matches your active search or category filters.'
+              : 'Workspace activities such as task progression, sprint start/end, and membership events will appear here.'
+          }
+          className="py-12"
+        />
+      )}
     </Card>
   );
 }

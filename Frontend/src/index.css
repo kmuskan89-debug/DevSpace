@@ -2,143 +2,241 @@
 
 @layer base {
   :root {
-    color-scheme: dark light;
+    color-scheme: light;
+    
+    /* Notion Light Monochrome Color Tokens */
+    --bg-main: #FFFFFF;
+    --bg-secondary: #F7F7F5;
+    --bg-sidebar: #FAFAF9;
+    --bg-card: #FFFFFF;
+    --bg-hover: #F1F1EF;
+    --bg-active: #EAEAE7;
+    
+    --text-primary: #252525;
+    --text-secondary: #777777;
+    --text-muted: #999999;
+    
+    --border-default: #E8E8E5;
+    --border-subtle: #F0F0ED;
+    --border-strong: #D1D1CD;
+    
+    --btn-primary-bg: #252525;
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: #111111;
+
+    --btn-secondary-bg: #F7F7F5;
+    --btn-secondary-text: #252525;
+    --btn-secondary-border: #E8E8E5;
+    --btn-secondary-hover: #F1F1EF;
+
+    /* Semantic tokens (restrained) */
+    --semantic-success: #107C41;
+    --semantic-success-bg: #EBF8F1;
+    --semantic-success-border: #D1F0DE;
+
+    --semantic-error: #D83B01;
+    --semantic-error-bg: #FDF3F2;
+    --semantic-error-border: #F9D5D3;
+
+    --semantic-warning: #B26B00;
+    --semantic-warning-bg: #FEF8ED;
+    --semantic-warning-border: #FBE5C3;
+
+    --semantic-info: #0078D4;
+    --semantic-info-bg: #EFF6FC;
+    --semantic-info-border: #C7E0F4;
   }
 
-  /* Dark Theme Default Body */
-  html.dark body {
-    background-color: #020617;
-    color: #f8fafc;
-  }
+  html.dark {
+    color-scheme: dark;
 
-  /* Light Theme Default Body */
-  html.light body {
-    background-color: #f8fafc;
-    color: #0f172a;
+    /* Notion Dark Monochrome Color Tokens */
+    --bg-main: #191919;
+    --bg-secondary: #202020;
+    --bg-sidebar: #1C1C1C;
+    --bg-card: #242424;
+    --bg-hover: #2A2A2A;
+    --bg-active: #333333;
+
+    --text-primary: #F2F2F2;
+    --text-secondary: #A0A0A0;
+    --text-muted: #777777;
+
+    --border-default: #353535;
+    --border-subtle: #2C2C2C;
+    --border-strong: #444444;
+
+    --btn-primary-bg: #F2F2F2;
+    --btn-primary-text: #191919;
+    --btn-primary-hover: #FFFFFF;
+
+    --btn-secondary-bg: #242424;
+    --btn-secondary-text: #F2F2F2;
+    --btn-secondary-border: #353535;
+    --btn-secondary-hover: #2A2A2A;
+
+    /* Semantic tokens (restrained dark) */
+    --semantic-success: #4EBE7E;
+    --semantic-success-bg: rgba(78, 190, 126, 0.12);
+    --semantic-success-border: rgba(78, 190, 126, 0.25);
+
+    --semantic-error: #F87171;
+    --semantic-error-bg: rgba(248, 113, 113, 0.12);
+    --semantic-error-border: rgba(248, 113, 113, 0.25);
+
+    --semantic-warning: #FBBF24;
+    --semantic-warning-bg: rgba(251, 191, 36, 0.12);
+    --semantic-warning-border: rgba(251, 191, 36, 0.25);
+
+    --semantic-info: #60A5FA;
+    --semantic-info-bg: rgba(96, 165, 250, 0.12);
+    --semantic-info-border: rgba(96, 165, 250, 0.25);
   }
 
   body {
-    @apply font-sans antialiased min-h-screen selection:bg-indigo-500 selection:text-white transition-colors duration-200;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
   }
 }
 
-/* Custom sleek scrollbars for developer dashboard vibe */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Notion Semantic Classes */
+.bg-main { background-color: var(--bg-main); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-sidebar { background-color: var(--bg-sidebar); }
+.bg-card { background-color: var(--bg-card); }
+.bg-hover { background-color: var(--bg-hover); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+
+.border-default { border-color: var(--border-default); }
+.border-subtle { border-color: var(--border-subtle); }
+.border-strong { border-color: var(--border-strong); }
+
+/* Notion Surface Replacements for legacy glass panels */
+.glass-panel,
+.glass-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
 }
 
-html.dark ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+.glass-card:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
 }
 
-html.dark ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
-  border-radius: 9999px;
-}
-
-html.light ::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.8);
-}
-
-html.light ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.8);
-  border-radius: 9999px;
-}
-
-/* Glassmorphism utilities for Dark & Light themes */
-html.dark .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-}
-
-html.dark .glass-card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-html.light .glass-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 2px 10px -1px rgba(0, 0, 0, 0.04);
-}
-
-html.light .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12);
-}
-
-html.dark .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-}
-
-/* Glow effects */
-.glow-primary {
-  box-shadow: 0 0 25px -5px rgba(99, 102, 241, 0.25);
-}
-
+/* Remove excessive glowing shadows */
+.glow-primary,
 .glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Light mode overrides for seamless theme switching without hardcoded dark colors */
-html.light .text-slate-100 {
-  color: #0f172a;
+/* Subtle, minimal scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-html.light .text-slate-200 {
-  color: #1e293b;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-html.light .text-slate-300 {
-  color: #334155;
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
 }
 
-html.light .text-slate-400 {
-  color: #475569;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
 
-html.light .text-slate-500 {
-  color: #64748b;
+/* =========================================================================
+   Compatibility Bridge for Existing Pages & Slate Utilities
+   Maps legacy dark-mode Slate classes to Notion Monochrome Tokens
+   ========================================================================= */
+
+/* Dark Mode Mappings */
+html.dark .bg-slate-950 { background-color: #191919; }
+html.dark .bg-slate-900 { background-color: #202020; }
+html.dark .bg-slate-900\/90 { background-color: #202020; }
+html.dark .bg-slate-900\/80 { background-color: #202020; }
+html.dark .bg-slate-900\/60 { background-color: #242424; }
+html.dark .bg-slate-900\/50 { background-color: #242424; }
+html.dark .bg-slate-900\/40 { background-color: #242424; }
+html.dark .bg-slate-850 { background-color: #242424; }
+html.dark .bg-slate-800 { background-color: #2A2A2A; }
+html.dark .bg-slate-800\/90 { background-color: #2A2A2A; }
+html.dark .bg-slate-800\/80 { background-color: #2A2A2A; }
+html.dark .bg-slate-800\/60 { background-color: #2A2A2A; }
+html.dark .bg-slate-800\/40 { background-color: #202020; }
+html.dark .bg-slate-800\/20 { background-color: #202020; }
+
+html.dark .border-slate-800 { border-color: #353535; }
+html.dark .border-slate-800\/80 { border-color: #353535; }
+html.dark .border-slate-700 { border-color: #404040; }
+html.dark .border-slate-700\/80 { border-color: #404040; }
+html.dark .border-slate-600 { border-color: #505050; }
+
+html.dark .text-slate-100 { color: #F2F2F2; }
+html.dark .text-slate-200 { color: #E5E5E5; }
+html.dark .text-slate-300 { color: #C5C5C5; }
+html.dark .text-slate-400 { color: #A0A0A0; }
+html.dark .text-slate-500 { color: #777777; }
+html.dark .text-slate-600 { color: #555555; }
+
+/* Light Mode Mappings */
+html.light .bg-slate-950 { background-color: #FFFFFF; }
+html.light .bg-slate-900 { background-color: #FFFFFF; }
+html.light .bg-slate-900\/90 { background-color: #FFFFFF; }
+html.light .bg-slate-900\/80 { background-color: #FFFFFF; }
+html.light .bg-slate-900\/60 { background-color: #F7F7F5; }
+html.light .bg-slate-900\/50 { background-color: #F7F7F5; }
+html.light .bg-slate-900\/40 { background-color: #F7F7F5; }
+html.light .bg-slate-850 { background-color: #F7F7F5; }
+html.light .bg-slate-800 { background-color: #F7F7F5; }
+html.light .bg-slate-800\/90 { background-color: #F7F7F5; }
+html.light .bg-slate-800\/80 { background-color: #F7F7F5; }
+html.light .bg-slate-800\/60 { background-color: #F1F1EF; }
+html.light .bg-slate-800\/40 { background-color: #F1F1EF; }
+html.light .bg-slate-800\/20 { background-color: #F7F7F5; }
+
+html.light .border-slate-800 { border-color: #E8E8E5; }
+html.light .border-slate-800\/80 { border-color: #E8E8E5; }
+html.light .border-slate-700 { border-color: #E8E8E5; }
+html.light .border-slate-700\/80 { border-color: #E8E8E5; }
+html.light .border-slate-600 { border-color: #D1D1CD; }
+
+html.light .text-slate-100 { color: #252525; }
+html.light .text-slate-200 { color: #333333; }
+html.light .text-slate-300 { color: #555555; }
+html.light .text-slate-400 { color: #777777; }
+html.light .text-slate-500 { color: #999999; }
+html.light .text-slate-600 { color: #B0B0B0; }
+
+/* Form Elements */
+input, select, textarea {
+  color: var(--text-primary);
+  background-color: var(--bg-main);
+  border-color: var(--border-default);
 }
 
-html.light .bg-slate-950 {
-  background-color: #f8fafc;
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--text-secondary);
 }
 
-html.light .bg-slate-900 {
-  background-color: #f1f5f9;
+/* Subtle Shimmer for Skeleton */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
-html.light .bg-slate-800 {
-  background-color: #e2e8f0;
-}
-
-html.light .border-slate-800 {
-  border-color: #e2e8f0;
-}
-
-html.light .border-slate-700 {
-  border-color: #cbd5e1;
-}
-
-html.light input,
-html.light select,
-html.light textarea {
-  color: #0f172a;
+.animate-shimmer {
+  animation: shimmer 1.8s infinite;
 }

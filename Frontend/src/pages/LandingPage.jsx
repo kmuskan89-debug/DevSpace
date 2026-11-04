@@ -8,7 +8,7 @@ import LandingFooter from '../components/landing/LandingFooter';
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#191919] text-[#252525] dark:text-[#F2F2F2] flex flex-col justify-between font-sans antialiased selection:bg-[#252525] selection:text-[#FFFFFF] dark:selection:bg-[#F2F2F2] dark:selection:text-[#191919] transition-colors duration-150 overflow-x-hidden">
       {/* Navbar */}
       <LandingNavbar />
 
@@ -17,7 +17,7 @@ export function LandingPage() {
         {/* Section 1: Hero with Dashboard Product Preview */}
         <HeroSection />
 
-        {/* Section 2: Features (6 Key Capabilities) */}
+        {/* Section 2: Features (7 Core Capabilities) */}
         <FeaturesSection />
 
         {/* Section 3: How It Works (4 Step Workflow) */}

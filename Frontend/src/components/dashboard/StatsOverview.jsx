@@ -1,67 +1,68 @@
 import React from 'react';
-import { Layers, FolderGit2, CheckSquare, Users, TrendingUp, GitBranch } from 'lucide-react';
+import { FolderGit2, CheckSquare, Clock, CheckCircle2 } from 'lucide-react';
 import Card from '../common/Card';
 
-export function StatsOverview() {
+export function StatsOverview({
+  projectsCount = 0,
+  tasksCount = 0,
+  inProgressCount = 0,
+  completedCount = 0
+}) {
+  const completionRate = tasksCount > 0 ? Math.round((completedCount / tasksCount) * 100) : 0;
+
   const stats = [
     {
-      title: 'Active Workspaces',
-      value: '4',
-      change: '+1 this month',
-      icon: Layers,
-      color: 'from-indigo-500 to-purple-600',
-      iconColor: 'text-indigo-400'
+      title: 'Active Projects',
+      value: String(projectsCount),
+      subtext: `${projectsCount} project${projectsCount === 1 ? '' : 's'} managed`,
+      icon: FolderGit2
     },
     {
-      title: 'Total Projects',
-      value: '11',
-      change: '8 active sprints',
-      icon: FolderGit2,
-      color: 'from-cyan-500 to-blue-600',
-      iconColor: 'text-cyan-400'
+      title: 'Total Tasks',
+      value: String(tasksCount),
+      subtext: `${tasksCount} total backlog & sprint item${tasksCount === 1 ? '' : 's'}`,
+      icon: CheckSquare
     },
     {
-      title: 'Open Tasks / PRs',
-      value: '26',
-      change: '14 reviewed today',
-      icon: CheckSquare,
-      color: 'from-emerald-500 to-teal-600',
-      iconColor: 'text-emerald-400'
+      title: 'In Progress',
+      value: String(inProgressCount),
+      subtext: 'Active issues under development',
+      icon: Clock
     },
     {
-      title: 'Collaborators',
-      value: '33',
-      change: '+5 pending invites',
-      icon: Users,
-      color: 'from-amber-500 to-rose-600',
-      iconColor: 'text-amber-400'
+      title: 'Completed',
+      value: String(completedCount),
+      subtext: `${completionRate}% completion rate`,
+      icon: CheckCircle2
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {stats.map((stat, idx) => {
         const Icon = stat.icon;
         return (
-          <Card key={idx} hoverable={true} className="relative overflow-hidden">
+          <Card
+            key={idx}
+            hoverable={false}
+            className="p-4 border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020] rounded-lg"
+          >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-medium text-[#777777] dark:text-[#A0A0A0]">
                   {stat.title}
                 </p>
-                <h4 className="text-2xl font-extrabold text-slate-100 mt-1">{stat.value}</h4>
-                <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-2 font-mono">
-                  <TrendingUp className="w-3 h-3 text-emerald-400" />
-                  <span>{stat.change}</span>
-                </div>
+                <h4 className="text-2xl font-bold text-[#252525] dark:text-[#F2F2F2] mt-1 tracking-tight">
+                  {stat.value}
+                </h4>
+                <p className="text-[11px] text-[#999999] dark:text-[#777777] mt-1">
+                  {stat.subtext}
+                </p>
               </div>
-              <div className={`p-2.5 rounded-xl bg-slate-900 border border-slate-800 ${stat.iconColor}`}>
-                <Icon className="w-5 h-5" />
+              <div className="w-7 h-7 rounded-md bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4" />
               </div>
             </div>
-
-            {/* Subtle glow accent bar */}
-            <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.color} opacity-60`} />
           </Card>
         );
       })}
