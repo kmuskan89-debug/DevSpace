@@ -38,8 +38,8 @@ test.describe('1. Authentication & Session Security Workflows', () => {
     const userMenuButton = page.locator('header').getByRole('button').filter({ has: page.locator('img, svg, div') }).last();
     await userMenuButton.click();
 
-    // Click Sign Out
-    await page.getByRole('button', { name: /sign out/i }).click();
+    // Click Sign Out in the opened user dropdown
+    await page.getByRole('banner').getByRole('button', { name: /sign out/i }).click();
     await page.waitForURL('**/login', { timeout: 10000 });
     await expect(page).toHaveURL(/\/login/);
 

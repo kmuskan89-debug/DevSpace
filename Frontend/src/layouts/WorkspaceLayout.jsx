@@ -75,6 +75,7 @@ export function WorkspaceLayout() {
       <WorkspaceNavTabs
         projectCount={projects.length}
         memberCount={members.length}
+        projects={projects}
       />
 
       {/* Sub-Route Page Content */}

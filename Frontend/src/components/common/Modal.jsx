@@ -31,9 +31,10 @@ export function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div key="modal-portal" className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
+            key="modal-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -44,6 +45,7 @@ export function Modal({
 
           {/* Modal Dialog */}
           <motion.div
+            key="modal-dialog"
             role="dialog"
             aria-modal="true"
             aria-label={typeof title === 'string' ? title : undefined}

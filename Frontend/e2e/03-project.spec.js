@@ -31,7 +31,7 @@ test.describe('3. Project Management Workflows', () => {
     await expect(page.getByText(randKey).first()).toBeVisible();
 
     // Refresh page to verify persistence from isolated test database
-    await page.reload();
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.getByText(projName).first()).toBeVisible();
     await expect(page.getByText(randKey).first()).toBeVisible();
 

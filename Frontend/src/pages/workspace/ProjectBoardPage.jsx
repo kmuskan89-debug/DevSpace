@@ -265,27 +265,27 @@ export function ProjectBoardPage() {
   };
 
   // Task Operations
-  const handleOpenAddTask = (status = 'To Do') => {
+  const handleOpenAddTask = useCallback((status = 'To Do') => {
     setSelectedTask(null);
     setModalDefaultStatus(status);
     setIsTaskModalOpen(true);
-  };
+  }, []);
 
-  const handleTaskClick = (task) => {
+  const handleTaskClick = useCallback((task) => {
     setSelectedTask(task);
     setIsTaskModalOpen(true);
     updateUrlParams({ taskId: task._id || task.id }, false);
-  };
+  }, [updateUrlParams]);
 
-  const handleCloseTaskModal = () => {
+  const handleCloseTaskModal = useCallback(() => {
     setIsTaskModalOpen(false);
     setSelectedTask(null);
     if (taskIdParam) {
       updateUrlParams({ taskId: null }, false);
     }
-  };
+  }, [taskIdParam, updateUrlParams]);
 
-  const handleSaveTask = async (savedTask) => {
+  const handleSaveTask = useCallback(async (savedTask) => {
     try {
       if (selectedTask || savedTask._id) {
         const taskId = selectedTask?._id || selectedTask?.id || savedTask._id || savedTask.id;
@@ -300,9 +300,9 @@ export function ProjectBoardPage() {
       console.error('Failed to save task:', err);
       addToast(err.response?.data?.message || err.message || 'Failed to save task', 'error');
     }
-  };
+  }, [selectedTask, updateTask, createTask, addToast, loadFilteredTasks]);
 
-  const handleDeleteTask = async (taskId) => {
+  const handleDeleteTask = useCallback(async (taskId) => {
     try {
       await deleteTask(taskId);
       addToast('Task deleted successfully', 'info');
@@ -312,7 +312,7 @@ export function ProjectBoardPage() {
       console.error('Failed to delete task:', err);
       addToast(err.response?.data?.message || err.message || 'Failed to delete task', 'error');
     }
-  };
+  }, [deleteTask, addToast, handleCloseTaskModal, loadFilteredTasks]);
 
   const handleMoveTask = async (taskId, newStatus) => {
     try {
@@ -513,6 +513,7 @@ export function ProjectBoardPage() {
 
       {/* 7. Task Details / Edit / Delete Modal */}
       <TaskModal
+        key="project-board-task-modal"
         isOpen={isTaskModalOpen}
         onClose={handleCloseTaskModal}
         task={selectedTask}

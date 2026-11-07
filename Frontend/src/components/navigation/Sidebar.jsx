@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate, useParams } from 'react-router-dom';
+import { NavLink, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar({ collapsed = false, mobileOpen = false, onCloseMobile }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { workspaceId } = useParams();
   const { workspace: activeWorkspace, projects } = useWorkspace(workspaceId);
   const { workspaces, openCreateModal } = useWorkspaceContext();
@@ -48,13 +49,11 @@ export function Sidebar({ collapsed = false, mobileOpen = false, onCloseMobile }
   const sprintBoardPath = firstProjectId
     ? `/workspace/${currentWsId}/projects/${firstProjectId}/board`
     : `/workspace/${currentWsId}/projects`;
-  const backlogPath = firstProjectId
-    ? `/workspace/${currentWsId}/projects/${firstProjectId}/backlog`
-    : `/workspace/${currentWsId}/projects`;
+  const backlogPath = `/workspace/${currentWsId}/backlog`;
 
   const navItems = [
     { label: 'Overview', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'My Tasks', path: `/workspace/${currentWsId}/projects`, icon: CheckSquare },
+    { label: 'My Tasks', path: `/workspace/${currentWsId}/tasks`, icon: CheckSquare },
     { label: 'Projects', path: `/workspace/${currentWsId}/projects`, icon: FolderGit2 },
     { label: 'Backlog', path: backlogPath, icon: Layers },
     { label: 'Sprints', path: sprintBoardPath, icon: Kanban },
@@ -221,17 +220,39 @@ export function Sidebar({ collapsed = false, mobileOpen = false, onCloseMobile }
                   end={item.path === '/dashboard'}
                   onClick={onCloseMobile}
                   title={item.label}
-                  className={({ isActive }) =>
-                    `flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  className={({ isActive }) => {
+                    const isItemActive = (() => {
+                      if (item.label === 'My Tasks') {
+                        return location.pathname.includes('/tasks') && !location.pathname.includes('/projects/');
+                      }
+                      if (item.label === 'Backlog') {
+                        return location.pathname.includes('/backlog');
+                      }
+                      if (item.label === 'Projects') {
+                        return (
+                          (location.pathname === item.path ||
+                            location.pathname.startsWith(`/workspace/${currentWsId}/projects`)) &&
+                          !location.pathname.includes('/backlog') &&
+                          !location.pathname.includes('/board') &&
+                          !location.pathname.includes('/tasks')
+                        );
+                      }
+                      if (item.label === 'Sprints') {
+                        return location.pathname.includes('/board') || (location.pathname.includes('/projects/') && location.pathname.includes('/tasks'));
+                      }
+                      return isActive;
+                    })();
+
+                    return `flex items-center rounded-md text-xs font-medium transition-colors cursor-pointer ${
                       isCollapsed
                         ? 'p-2 justify-center'
                         : 'gap-2.5 px-2.5 py-1.5'
                     } ${
-                      isActive
+                      isItemActive
                         ? 'bg-[#F1F1EF] dark:bg-[#2A2A2A] text-[#252525] dark:text-[#F2F2F2] font-semibold shadow-2xs'
                         : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A]'
-                    }`
-                  }
+                    }`;
+                  }}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
                   {!isCollapsed && <span>{item.label}</span>}

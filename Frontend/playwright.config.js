@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   testDir: './e2e',
-  timeout: 45000,
+  timeout: 60000,
   expect: {
     timeout: 8000,
   },

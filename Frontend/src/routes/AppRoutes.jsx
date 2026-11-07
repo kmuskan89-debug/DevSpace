@@ -23,6 +23,8 @@ const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'));
 // Lazy Loaded Workspace Sub-Pages
 const WorkspaceOverviewPage = lazy(() => import('../pages/workspace/WorkspaceOverviewPage'));
 const WorkspaceProjectsPage = lazy(() => import('../pages/workspace/WorkspaceProjectsPage'));
+const WorkspaceBacklogPage = lazy(() => import('../pages/workspace/WorkspaceBacklogPage'));
+const WorkspaceTasksPage = lazy(() => import('../pages/workspace/WorkspaceTasksPage'));
 const ProjectDetailPage = lazy(() => import('../pages/workspace/ProjectDetailPage'));
 const ProjectBoardPage = lazy(() => import('../pages/workspace/ProjectBoardPage'));
 const ProjectBacklogPage = lazy(() => import('../pages/workspace/ProjectBacklogPage'));
@@ -61,6 +63,8 @@ export function AppRoutes() {
               <Route index element={<WorkspaceOverviewPage />} />
               <Route path="analytics" element={<WorkspaceOverviewPage />} />
               <Route path="projects" element={<WorkspaceProjectsPage />} />
+              <Route path="backlog" element={<WorkspaceBacklogPage />} />
+              <Route path="tasks" element={<WorkspaceTasksPage />} />
               <Route path="projects/:projectId" element={<ProjectDetailPage />} />
               <Route path="projects/:projectId/board" element={<ProjectBoardPage />} />
               <Route path="projects/:projectId/tasks" element={<ProjectBoardPage />} />

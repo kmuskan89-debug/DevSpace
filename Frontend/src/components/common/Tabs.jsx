@@ -7,18 +7,27 @@ export function Tabs({ tabs = [], activeTab, onChange, className = '', layoutId 
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         const Icon = tab.icon;
+        const isDisabled = Boolean(tab.disabled);
         return (
           <button
             key={tab.id}
             type="button"
-            onClick={() => onChange(tab.id)}
-            className={`relative inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap cursor-pointer focus:outline-none ${
-              isActive
-                ? 'text-[#252525] dark:text-[#F2F2F2] font-semibold'
-                : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] rounded'
+            disabled={isDisabled}
+            onClick={() => {
+              if (!isDisabled) {
+                onChange(tab.id);
+              }
+            }}
+            title={tab.title || undefined}
+            className={`relative inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap focus:outline-none ${
+              isDisabled
+                ? 'opacity-40 cursor-not-allowed text-[#999999] dark:text-[#666666]'
+                : isActive
+                ? 'text-[#252525] dark:text-[#F2F2F2] font-semibold cursor-pointer'
+                : 'text-[#777777] dark:text-[#A0A0A0] hover:text-[#252525] dark:hover:text-[#F2F2F2] hover:bg-[#F1F1EF] dark:hover:bg-[#2A2A2A] rounded cursor-pointer'
             }`}
           >
-            {isActive && (
+            {isActive && !isDisabled && (
               <motion.div
                 layoutId={layoutId}
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#252525] dark:bg-[#F2F2F2]"

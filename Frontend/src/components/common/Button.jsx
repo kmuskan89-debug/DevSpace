@@ -26,22 +26,24 @@ export function Button({
   className = '',
   disabled = false,
   loading = false,
+  isLoading = false,
   onClick,
   type = 'button',
   ...props
 }) {
   const variantClass = variants[variant] || variants.primary;
   const sizeClass = sizes[size] || sizes.md;
+  const isButtonLoading = Boolean(loading || isLoading);
 
   return (
     <button
       type={type}
-      disabled={disabled || loading}
+      disabled={disabled || isButtonLoading}
       onClick={onClick}
       className={`inline-flex items-center justify-center transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 ${variantClass} ${sizeClass} ${className}`}
       {...props}
     >
-      {loading ? (
+      {isButtonLoading ? (
         <svg
           className="animate-spin h-3.5 w-3.5 text-current shrink-0"
           xmlns="http://www.w3.org/2000/svg"
@@ -59,7 +61,7 @@ export function Button({
         Icon && <Icon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'} shrink-0`} />
       )}
       {children && <span>{children}</span>}
-      {!loading && RightIcon && (
+      {!isButtonLoading && RightIcon && (
         <RightIcon className={`${size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5'} shrink-0`} />
       )}
     </button>

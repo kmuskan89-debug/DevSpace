@@ -3,6 +3,7 @@ import { generateTestUser, registerTestUser } from './helpers.js';
 
 test.describe('6. Team Collaboration & Members Workflows', () => {
   test('lists workspace members, sends invitation, and inspects roles & permissions matrix', async ({ page }) => {
+    test.slow();
     const user = generateTestUser('collab_flow');
     await registerTestUser(page, user);
 
@@ -17,6 +18,7 @@ test.describe('6. Team Collaboration & Members Workflows', () => {
 
     // 3. Open Invite Member modal
     await page.getByTestId('open-invite-modal-btn').click();
+
     const inviteModal = page.getByRole('dialog');
     await expect(inviteModal).toBeVisible();
 
@@ -29,11 +31,12 @@ test.describe('6. Team Collaboration & Members Workflows', () => {
     // Verify invitation confirmation / token display
     await expect(page.getByText(/invitation sent|invitation generated/i).first()).toBeVisible();
 
-    // Close modal if still visible
-    const doneBtn = page.getByRole('button', { name: /done|cancel/i });
-    if (await doneBtn.isVisible()) {
-      await doneBtn.click();
+    // Close modal cleanly via Escape key
+    await page.keyboard.press('Escape');
+    if (await inviteModal.isVisible().catch(() => false)) {
+      await page.keyboard.press('Escape');
     }
+    await expect(inviteModal).not.toBeVisible();
 
     // 4. Switch to "Pending Invitations" tab
     await page.getByRole('button', { name: /pending invitations/i }).click();

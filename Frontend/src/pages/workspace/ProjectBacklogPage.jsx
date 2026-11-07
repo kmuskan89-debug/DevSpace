@@ -27,9 +27,10 @@ import EmptyState from '../../components/common/EmptyState';
 import { SkeletonLoader } from '../../components/common/SkeletonLoader';
 import { canManageProject } from '../../utils/normalizers';
 
-export function ProjectBacklogPage() {
+export function ProjectBacklogPage({ overrideProjectId, hideNavTabs = false }) {
   const navigate = useNavigate();
-  const { workspaceId, projectId: _paramProjectId } = useParams();
+  const { workspaceId, projectId: paramProjectId } = useParams();
+  const effectiveProjectId = overrideProjectId || paramProjectId;
   const { user } = useAuth();
   const { addToast } = useToast();
 
@@ -52,7 +53,7 @@ export function ProjectBacklogPage() {
     updateTask,
     deleteTask,
     fetchSprints
-  } = useProject();
+  } = useProject(effectiveProjectId);
 
   const { members, workspace } = useWorkspace(workspaceId || project?.workspaceId);
   const canManage = canManageProject(project, workspace, user);
@@ -367,7 +368,7 @@ export function ProjectBacklogPage() {
       <ProjectHeader project={project} onAddTask={() => handleOpenCreateIssue(null)} />
 
       {/* 2. NAVIGATION TABS */}
-      <ProjectNavTabs taskCount={tasks.length} />
+      {!hideNavTabs && <ProjectNavTabs taskCount={tasks.length} />}
 
       {/* 3. CONTROLS BAR: SEARCH, FILTERS, CREATE SPRINT & ISSUE */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border border-[#E8E8E5] dark:border-[#353535] bg-[#FFFFFF] dark:bg-[#202020]">

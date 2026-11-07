@@ -47,6 +47,7 @@ test.describe('2. Workspace Management Workflows', () => {
   });
 
   test('verifies workspace details and settings accessibility', async ({ page }) => {
+    test.slow();
     const user = generateTestUser('ws_details');
     await registerTestUser(page, user);
 

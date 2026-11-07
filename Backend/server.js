@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const connectDb = require('./db/db');
+const { validateEnv } = require('./utils/validateEnv');
 
 const userRouter = require('./routes/user.routes');
 const workspaceRouter = require('./routes/workspace.routes');
@@ -20,6 +21,17 @@ const analyticsRouter = require('./routes/analytics.routes');
 
 const app = express();
 app.disable('x-powered-by');
+
+// Reverse Proxy Configuration (Render / Cloud deployment)
+// Render operates behind 1 proxy hop. Setting trust proxy to 1 ensures req.ip resolves to the real client IP
+// rather than the internal Render load balancer, preventing global rate limiting pooling while mitigating IP spoofing.
+const trustProxyConfig = process.env.TRUST_PROXY !== undefined
+    ? (isNaN(process.env.TRUST_PROXY) ? process.env.TRUST_PROXY : Number(process.env.TRUST_PROXY))
+    : (process.env.NODE_ENV === 'production' ? 1 : false);
+
+if (trustProxyConfig) {
+    app.set('trust proxy', trustProxyConfig);
+}
 const PORT = process.env.PORT || 3000;
 const isTestEnv = process.env.NODE_ENV === 'test';
 
@@ -207,6 +219,13 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
+    try {
+        validateEnv();
+    } catch (err) {
+        console.error(err.message);
+        process.exit(1);
+    }
+
     connectDb();
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);

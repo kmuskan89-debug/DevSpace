@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Trash2,
   Edit3,
@@ -25,7 +25,7 @@ export function TaskModal({ isOpen, onClose, task, defaultStatus = 'To Do', onSa
   // Modal Tab State: 'details' or 'discussion'
   const [activeTab, setActiveTab] = useState('details');
 
-  const memberList = members || [];
+  const memberList = useMemo(() => members || [], [members]);
 
   // Form Field States
   const [title, setTitle] = useState('');
@@ -84,42 +84,65 @@ export function TaskModal({ isOpen, onClose, task, defaultStatus = 'To Do', onSa
     }
   }, [taskId]);
 
+  const prevIsOpenRef = useRef(false);
+  const prevTaskIdRef = useRef(null);
+
   // Sync state when `task` changes or modal opens
   useEffect(() => {
-    if (!isOpen) return;
-
-    if (task) {
-      setTitle(task.title || '');
-      setDescription(task.description || '');
-      setPriority(task.priority || 'Medium');
-      setStatus(task.status || 'To Do');
-      setAssigneeId(
-        task.assignee?.id ||
-          task.assignee?._id ||
-          task.assigneeId ||
-          ''
-      );
-      setTags(task.tags ? task.tags.join(', ') : (task.labels ? task.labels.join(', ') : ''));
-      setBranch(task.branch || 'feature/task');
-      setDueDate(task.dueDate ? (task.dueDate.includes('T') ? task.dueDate.split('T')[0] : task.dueDate) : '');
-      setSubtasks(task.subtasks || []);
-      loadComments();
-    } else {
-      setTitle('');
-      setDescription('');
-      setPriority('Medium');
-      setStatus(defaultStatus);
-      setAssigneeId(memberList[0]?.id || memberList[0]?._id || '');
-      setTags('');
-      setBranch('feature/task');
-      setDueDate('');
-      setSubtasks([]);
-      setComments([]);
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      prevTaskIdRef.current = null;
+      return;
     }
-    setTitleError('');
-    setCommentError('');
-    setActiveTab('details');
-  }, [isOpen, task, defaultStatus]);
+
+    const currentTaskId = task?._id || task?.id || null;
+    const isInitialOpen = !prevIsOpenRef.current;
+    const isTaskSwitched = prevTaskIdRef.current !== currentTaskId;
+
+    if (isInitialOpen || isTaskSwitched) {
+      prevIsOpenRef.current = true;
+      prevTaskIdRef.current = currentTaskId;
+
+      if (task) {
+        setTitle(task.title || '');
+        setDescription(task.description || '');
+        setPriority(task.priority || 'Medium');
+        setStatus(task.status || 'To Do');
+        setAssigneeId(
+          task.assignee?.id ||
+            task.assignee?._id ||
+            task.assigneeId ||
+            ''
+        );
+        setTags(task.tags ? task.tags.join(', ') : (task.labels ? task.labels.join(', ') : ''));
+        setBranch(task.branch || 'feature/task');
+        setDueDate(task.dueDate ? (task.dueDate.includes('T') ? task.dueDate.split('T')[0] : task.dueDate) : '');
+        setSubtasks(task.subtasks || []);
+        loadComments();
+      } else {
+        setTitle('');
+        setDescription('');
+        setPriority('Medium');
+        setStatus(defaultStatus);
+        setAssigneeId(memberList[0]?.id || memberList[0]?._id || '');
+        setTags('');
+        setBranch('feature/task');
+        setDueDate('');
+        setSubtasks([]);
+        setComments([]);
+      }
+      setTitleError('');
+      setCommentError('');
+      setActiveTab('details');
+    }
+  }, [isOpen, task, defaultStatus, loadComments, memberList]);
+
+  // Backfill default assignee when members load asynchronously for new tasks
+  useEffect(() => {
+    if (isOpen && !task && !assigneeId && memberList.length > 0) {
+      setAssigneeId(memberList[0]?.id || memberList[0]?._id || '');
+    }
+  }, [isOpen, task, assigneeId, memberList]);
 
   // Selected Assignee Helper
   const currentAssignee = memberList.find((m) => m.id === assigneeId || m._id === assigneeId) || null;

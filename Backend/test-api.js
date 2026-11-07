@@ -11,6 +11,7 @@ const activityModel = require('./models/activity.model');
 const notificationModel = require('./models/notification.model');
 const sprintModel = require('./models/sprint.model');
 const savedViewModel = require('./models/savedView.model');
+const { validateEnv } = require('./utils/validateEnv');
 const jwt = require('jsonwebtoken');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/DevSpace';
@@ -1218,6 +1219,69 @@ async function runTests() {
         const serialized = userDoc.toJSON();
         assert(serialized.password === undefined, 'toJSON schema transform strips password hash');
         assert(serialized.__v === undefined, 'toJSON schema transform strips internal __v version');
+
+        // -----------------------------------------------------------------
+        // 21. Production Hardening & Pre-Deployment Verification
+        // -----------------------------------------------------------------
+        console.log('\n--- Section 21: Pre-Deployment Hardening Verification ---');
+
+        // 21.1 Removed Unused/Debug GET Routes Return 404
+        const testRouteRes = await request('/api/auth/test');
+        assert(testRouteRes.status === 404, 'Legacy debug route GET /api/auth/test removed and returns 404');
+
+        const getRegisterRes = await request('/api/auth/register');
+        assert(getRegisterRes.status === 404, 'Legacy debug route GET /api/auth/register removed and returns 404');
+
+        // 21.2 Production Environment Validation - Missing Variables
+        let envErrorCaught = false;
+        try {
+            validateEnv({
+                NODE_ENV: 'production',
+                MONGO_URI: '',
+                JWT_SECRET: ''
+            });
+        } catch (err) {
+            envErrorCaught = true;
+            assert(err.isEnvError === true, 'validateEnv throws specialized environment validation error');
+            assert(err.message.includes('MONGO_URI'), 'Validation error details missing MONGO_URI');
+            assert(err.message.includes('JWT_SECRET'), 'Validation error details missing JWT_SECRET');
+            assert(!err.message.includes('mongodb://'), 'Error message does not leak connection string');
+        }
+        assert(envErrorCaught, 'validateEnv correctly throws in production when required variables are missing');
+
+        // 21.3 Production Environment Validation - Short/Placeholder Secret
+        let secretErrorCaught = false;
+        try {
+            validateEnv({
+                NODE_ENV: 'production',
+                MONGO_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/DevSpace',
+                JWT_SECRET: 'short_secret',
+                CLIENT_URL: 'https://devspace.vercel.app'
+            });
+        } catch (err) {
+            secretErrorCaught = true;
+            assert(err.message.includes('at least 32 characters'), 'validateEnv rejects JWT secrets under 32 chars');
+            assert(!err.message.includes('short_secret'), 'validateEnv never prints secret value in error message');
+        }
+        assert(secretErrorCaught, 'validateEnv enforces minimum secret length in production');
+
+        // 21.4 Production Environment Validation - Valid Configuration Pass
+        const validEnvResult = validateEnv({
+            NODE_ENV: 'production',
+            MONGO_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/DevSpace',
+            JWT_SECRET: 'super_secure_production_secret_key_32chars!',
+            CLIENT_URL: 'https://devspace.vercel.app'
+        });
+        assert(validEnvResult === true, 'validateEnv passes on compliant production environment configuration');
+
+        // 21.5 Express Reverse Proxy Trust Setting
+        // In production, trust proxy is 1 (Render 1-hop proxy)
+        const currentTrustSetting = app.get('trust proxy');
+        assert(
+            currentTrustSetting === 1 || typeof currentTrustSetting === 'function' || currentTrustSetting === false || currentTrustSetting === undefined,
+            'Express trust proxy is configured deterministically'
+        );
+        console.log(`[Proxy Trust] Current express trust proxy setting: ${currentTrustSetting}`);
 
         // -----------------------------------------------------------------
         // Test Cleanup

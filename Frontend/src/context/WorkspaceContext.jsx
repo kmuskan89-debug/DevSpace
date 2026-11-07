@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../utils/axios';
 import { useAuth } from './AuthContext';
-import { normalizeWorkspace } from '../utils/normalizers';
+import { normalizeWorkspace, normalizeProject } from '../utils/normalizers';
 
-export { normalizeWorkspace };
+export { normalizeWorkspace, normalizeProject };
 
 const WorkspaceContext = createContext(null);
 
@@ -13,13 +13,20 @@ export function WorkspaceProvider({ children }) {
   const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
   const [error, setError] = useState(null);
 
-  // Cache for members and invitations by workspace ID
+  // Cache for members, invitations, activities, and projects by workspace ID
   const [membersByWorkspace, setMembersByWorkspace] = useState({});
   const [invitationsByWorkspace, setInvitationsByWorkspace] = useState({});
   const [activitiesByWorkspace, setActivitiesByWorkspace] = useState({});
+  const [projectsByWorkspace, setProjectsByWorkspace] = useState({});
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [isLoadingInvitations, setIsLoadingInvitations] = useState(false);
   const [isLoadingActivities, setIsLoadingActivities] = useState(false);
+  const [isLoadingProjectsByWorkspace, setIsLoadingProjectsByWorkspace] = useState({});
+  const [projectsErrorByWorkspace, setProjectsErrorByWorkspace] = useState({});
+
+  const projectsByWorkspaceRef = useRef(projectsByWorkspace);
+  projectsByWorkspaceRef.current = projectsByWorkspace;
+  const inFlightProjectsRef = useRef({});
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -61,6 +68,147 @@ export function WorkspaceProvider({ children }) {
     );
     return found || null;
   }, [workspaces]);
+
+  // Fetch a single workspace directly if navigated to by ID or slug
+  const fetchWorkspaceById = useCallback(async (idOrSlug) => {
+    if (!idOrSlug || !isAuthenticated) return null;
+    try {
+      const response = await api.get(`/workspaces/${idOrSlug}`);
+      const rawWs = response.data?.workspace;
+      if (rawWs) {
+        const normalized = normalizeWorkspace(rawWs);
+        setWorkspaces((prev) => {
+          const exists = prev.some((w) => w.id === normalized.id || w._id === normalized._id || w.slug === normalized.slug);
+          if (exists) {
+            return prev.map((w) => (w.id === normalized.id || w._id === normalized._id || w.slug === normalized.slug ? normalized : w));
+          }
+          return [...prev, normalized];
+        });
+        return normalized;
+      }
+      return null;
+    } catch (err) {
+      console.warn('Could not fetch single workspace:', idOrSlug, err?.response?.data?.message || err.message);
+      return null;
+    }
+  }, [isAuthenticated]);
+
+  // Fetch real workspace projects from MongoDB
+  const fetchProjects = useCallback(async (workspaceId, force = false) => {
+    if (!workspaceId) return [];
+
+    if (!force && projectsByWorkspaceRef.current[workspaceId]) {
+      return projectsByWorkspaceRef.current[workspaceId];
+    }
+
+    if (inFlightProjectsRef.current[workspaceId]) {
+      return inFlightProjectsRef.current[workspaceId];
+    }
+
+    setIsLoadingProjectsByWorkspace((prev) => ({ ...prev, [workspaceId]: true }));
+    setProjectsErrorByWorkspace((prev) => ({ ...prev, [workspaceId]: null }));
+
+    const fetchPromise = (async () => {
+      try {
+        const response = await api.get(`/workspaces/${workspaceId}/projects`);
+        const rawProjects = response.data?.projects || [];
+        const normalized = rawProjects.map((p) => normalizeProject(p, workspaceId));
+        setProjectsByWorkspace((prev) => ({
+          ...prev,
+          [workspaceId]: normalized
+        }));
+        return normalized;
+      } catch (err) {
+        const msg = err?.response?.data?.message || err.message || 'Failed to load projects';
+        console.error('Failed to fetch workspace projects:', msg);
+        setProjectsErrorByWorkspace((prev) => ({ ...prev, [workspaceId]: msg }));
+        setProjectsByWorkspace((prev) => ({
+          ...prev,
+          [workspaceId]: prev[workspaceId] || []
+        }));
+        return [];
+      } finally {
+        setIsLoadingProjectsByWorkspace((prev) => ({ ...prev, [workspaceId]: false }));
+        delete inFlightProjectsRef.current[workspaceId];
+      }
+    })();
+
+    inFlightProjectsRef.current[workspaceId] = fetchPromise;
+    return fetchPromise;
+  }, []);
+
+  // Create project in MongoDB
+  const createProject = useCallback(async (workspaceId, projectData) => {
+    if (!workspaceId) throw new Error('No active workspace selected');
+
+    const payload = {
+      name: projectData.name?.trim(),
+      key: projectData.key?.trim().toUpperCase(),
+      description: projectData.description?.trim() || '',
+      status: projectData.status || 'Active',
+      priority: projectData.priority || 'Medium',
+      techStack: projectData.techStack,
+      githubRepo: projectData.githubRepo?.trim() || '',
+      lead: projectData.lead || undefined
+    };
+
+    const response = await api.post(`/workspaces/${workspaceId}/projects`, payload);
+    const created = normalizeProject(response.data?.project, workspaceId);
+
+    setProjectsByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: [created, ...(prev[workspaceId] || [])]
+    }));
+
+    // Increment workspace projectCount
+    setWorkspaces((prev) =>
+      prev.map((w) =>
+        (w.id === workspaceId || w._id === workspaceId || w.slug === workspaceId)
+          ? { ...w, projectCount: (w.projectCount || 0) + 1 }
+          : w
+      )
+    );
+
+    return created;
+  }, []);
+
+  // Update project in MongoDB
+  const updateProject = useCallback(async (workspaceId, projectId, fields) => {
+    const response = await api.put(`/projects/${projectId}`, fields);
+    const updated = normalizeProject(response.data?.project, workspaceId);
+
+    setProjectsByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).map((p) =>
+        p.id === projectId || p._id === projectId ? updated : p
+      )
+    }));
+
+    return updated;
+  }, []);
+
+  // Delete project in MongoDB
+  const deleteProject = useCallback(async (workspaceId, projectId) => {
+    const response = await api.delete(`/projects/${projectId}`);
+
+    setProjectsByWorkspace((prev) => ({
+      ...prev,
+      [workspaceId]: (prev[workspaceId] || []).filter(
+        (p) => p.id !== projectId && p._id !== projectId
+      )
+    }));
+
+    // Decrement workspace projectCount
+    setWorkspaces((prev) =>
+      prev.map((w) =>
+        (w.id === workspaceId || w._id === workspaceId || w.slug === workspaceId)
+          ? { ...w, projectCount: Math.max(0, (w.projectCount || 1) - 1) }
+          : w
+      )
+    );
+
+    return response.data;
+  }, []);
 
   // Fetch real workspace members from MongoDB
   const fetchMembers = useCallback(async (workspaceId) => {
@@ -221,6 +369,11 @@ export function WorkspaceProvider({ children }) {
         delete nextMap[workspaceId];
         return nextMap;
       });
+      setProjectsByWorkspace((prev) => {
+        const nextMap = { ...prev };
+        delete nextMap[workspaceId];
+        return nextMap;
+      });
     } catch (err) {
       console.error('Failed to delete workspace in database:', err);
       throw new Error(err.response?.data?.message || 'Failed to delete workspace');
@@ -299,13 +452,21 @@ export function WorkspaceProvider({ children }) {
     error,
     fetchWorkspaces,
     getWorkspace,
+    fetchWorkspaceById,
     getMembers,
     membersByWorkspace,
     invitationsByWorkspace,
     activitiesByWorkspace,
+    projectsByWorkspace,
     isLoadingMembers,
     isLoadingInvitations,
     isLoadingActivities,
+    isLoadingProjectsByWorkspace,
+    projectsErrorByWorkspace,
+    fetchProjects,
+    createProject,
+    updateProject,
+    deleteProject,
     fetchMembers,
     fetchInvitations,
     fetchActivities,
@@ -325,13 +486,21 @@ export function WorkspaceProvider({ children }) {
     error,
     fetchWorkspaces,
     getWorkspace,
+    fetchWorkspaceById,
     getMembers,
     membersByWorkspace,
     invitationsByWorkspace,
     activitiesByWorkspace,
+    projectsByWorkspace,
     isLoadingMembers,
     isLoadingInvitations,
     isLoadingActivities,
+    isLoadingProjectsByWorkspace,
+    projectsErrorByWorkspace,
+    fetchProjects,
+    createProject,
+    updateProject,
+    deleteProject,
     fetchMembers,
     fetchInvitations,
     fetchActivities,

@@ -45,6 +45,15 @@ describe('Shared UI Components', () => {
       expect(btn).toBeDisabled();
       expect(btn.querySelector('.animate-spin')).toBeInTheDocument();
     });
+
+    it('renders loading spinner, disables button, and does not forward isLoading to DOM when isLoading=true', () => {
+      render(<Button isLoading>Submitting</Button>);
+      const btn = screen.getByRole('button');
+      expect(btn).toBeDisabled();
+      expect(btn.querySelector('.animate-spin')).toBeInTheDocument();
+      expect(btn).not.toHaveAttribute('isloading');
+      expect(btn).not.toHaveAttribute('isLoading');
+    });
   });
 
   describe('Input Component', () => {

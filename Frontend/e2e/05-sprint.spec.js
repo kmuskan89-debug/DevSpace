@@ -23,7 +23,7 @@ test.describe('5. Scrum & Sprint Management Workflows', () => {
     await page.waitForURL(/\/projects\/[a-zA-Z0-9]+/, { timeout: 15000 });
 
     // Click Backlog tab in navigation
-    await page.getByRole('button', { name: /^Backlog/ }).click();
+    await page.getByRole('button', { name: /^Backlog/ }).last().click();
     await page.waitForURL(/\/backlog/, { timeout: 15000 });
 
     // 3. Open Create Sprint modal

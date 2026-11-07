@@ -8,12 +8,6 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const authMiddleware = require('../middleware/auth.middleware');
 
-router.get('/register', (req, res) => {
-    res.json({
-        message: "Register API working"
-    });
-});
-
 /**
  * POST /api/auth/register
  * Secure user registration with password hashing and starter workspace
@@ -354,11 +348,5 @@ router.post('/forgot-password',
         }
     }
 );
-
-router.get('/test', (req, res) => {
-    res.json({
-        message: "User router is working"
-    });
-});
 
 module.exports = router;

@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useWorkspaceContext } from '../context/WorkspaceContext';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/axios';
-import { normalizeProject } from '../utils/normalizers';
 
 export function useWorkspace(overrideWorkspaceId) {
   const { workspaceId: paramId } = useParams();
@@ -16,86 +14,80 @@ export function useWorkspace(overrideWorkspaceId) {
     return context.getWorkspace(targetId);
   }, [context.getWorkspace, targetId]);
 
-  const [projects, setProjects] = useState([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
-  const [projectsError, setProjectsError] = useState(null);
+  // If targetId is provided but not found in context.workspaces, fetch directly
+  useEffect(() => {
+    if (targetId && !workspace && !context.isLoadingWorkspaces && context.fetchWorkspaceById) {
+      context.fetchWorkspaceById(targetId);
+    }
+  }, [targetId, workspace, context.isLoadingWorkspaces, context.fetchWorkspaceById]);
 
   const wsIdentifier = workspace?._id || workspace?.id;
-  const { fetchMembers, fetchInvitations, fetchActivities } = context;
+  const {
+    fetchMembers,
+    fetchInvitations,
+    fetchActivities,
+    fetchProjects: contextFetchProjects,
+    createProject: contextCreateProject,
+    updateProject: contextUpdateProject,
+    deleteProject: contextDeleteProject,
+    projectsByWorkspace,
+    isLoadingProjectsByWorkspace,
+    projectsErrorByWorkspace
+  } = context;
+
+  const projects = useMemo(() => {
+    if (!wsIdentifier) return [];
+    return projectsByWorkspace?.[wsIdentifier] || [];
+  }, [projectsByWorkspace, wsIdentifier]);
+
+  const isLoadingProjects = Boolean(wsIdentifier && isLoadingProjectsByWorkspace?.[wsIdentifier]);
+  const projectsError = (wsIdentifier && projectsErrorByWorkspace?.[wsIdentifier]) || null;
 
   // Fetch real projects for current workspace from backend
-  const fetchProjects = useCallback(async () => {
-    if (!wsIdentifier) {
-      setProjects([]);
-      return;
-    }
-
-    setIsLoadingProjects(true);
-    setProjectsError(null);
-
-    try {
-      const response = await api.get(`/workspaces/${wsIdentifier}/projects`);
-      const rawProjects = response.data?.projects || [];
-      const normalized = rawProjects.map((p) => normalizeProject(p, wsIdentifier));
-      setProjects(normalized);
-    } catch (err) {
-      console.error('Failed to fetch workspace projects:', err?.response?.data?.message || err.message);
-      setProjectsError(err?.response?.data?.message || 'Failed to load projects');
-      setProjects([]);
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  }, [wsIdentifier]);
+  const fetchProjects = useCallback(
+    (force = true) => {
+      if (!wsIdentifier) return Promise.resolve([]);
+      return contextFetchProjects(wsIdentifier, force);
+    },
+    [contextFetchProjects, wsIdentifier]
+  );
 
   // Fetch projects, members, invitations, and activity for active workspace
   useEffect(() => {
     if (wsIdentifier) {
-      fetchProjects();
+      contextFetchProjects(wsIdentifier, false);
       fetchMembers(wsIdentifier);
       fetchInvitations(wsIdentifier);
       fetchActivities(wsIdentifier);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsIdentifier]);
+  }, [wsIdentifier, contextFetchProjects, fetchMembers, fetchInvitations, fetchActivities]);
 
   // Create project in MongoDB
-  const createProject = useCallback(async (projectData) => {
-    if (!workspace) throw new Error('No active workspace selected');
-    const currentId = workspace._id || workspace.id;
-
-    const payload = {
-      name: projectData.name?.trim(),
-      key: projectData.key?.trim().toUpperCase(),
-      description: projectData.description?.trim() || '',
-      status: projectData.status || 'Active',
-      priority: projectData.priority || 'Medium',
-      techStack: projectData.techStack,
-      githubRepo: projectData.githubRepo?.trim() || '',
-      lead: projectData.lead || undefined
-    };
-
-    const response = await api.post(`/workspaces/${currentId}/projects`, payload);
-    const created = normalizeProject(response.data?.project, currentId);
-    setProjects((prev) => [created, ...prev]);
-    return created;
-  }, [workspace]);
+  const createProject = useCallback(
+    async (projectData) => {
+      if (!wsIdentifier) throw new Error('No active workspace selected');
+      return contextCreateProject(wsIdentifier, projectData);
+    },
+    [contextCreateProject, wsIdentifier]
+  );
 
   // Update project in MongoDB
-  const updateProject = useCallback(async (projectId, fields) => {
-    const response = await api.put(`/projects/${projectId}`, fields);
-    const updated = normalizeProject(response.data?.project, workspace?._id || workspace?.id);
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId || p._id === projectId ? updated : p))
-    );
-    return updated;
-  }, [workspace]);
+  const updateProject = useCallback(
+    async (projectId, fields) => {
+      if (!wsIdentifier) throw new Error('No active workspace selected');
+      return contextUpdateProject(wsIdentifier, projectId, fields);
+    },
+    [contextUpdateProject, wsIdentifier]
+  );
 
   // Delete project in MongoDB
-  const deleteProject = useCallback(async (projectId) => {
-    const response = await api.delete(`/projects/${projectId}`);
-    setProjects((prev) => prev.filter((p) => p.id !== projectId && p._id !== projectId));
-    return response.data;
-  }, []);
+  const deleteProject = useCallback(
+    async (projectId) => {
+      if (!wsIdentifier) throw new Error('No active workspace selected');
+      return contextDeleteProject(wsIdentifier, projectId);
+    },
+    [contextDeleteProject, wsIdentifier]
+  );
 
   // Members list
   const members = useMemo(() => {
